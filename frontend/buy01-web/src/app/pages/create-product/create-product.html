@@ -1,0 +1,48 @@
+<div class="container" style="max-width: 500px; margin: 2rem auto;">
+  <h2>Vendre un produit</h2>
+
+  @if (message()) {
+    <div style="background: #e0f7fa; padding: 10px; margin-bottom: 10px; border-radius: 4px;">
+      {{ message() }}
+    </div>
+  }
+
+  <form [formGroup]="productForm" (ngSubmit)="onSubmit()">
+
+    <div style="margin-bottom: 1rem;">
+      <label>Nom du produit</label>
+      <input type="text" formControlName="name" style="width: 100%; padding: 8px;">
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <label>Description</label>
+      <textarea formControlName="description" style="width: 100%; padding: 8px;"></textarea>
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <label>Prix (€)</label>
+      <input type="number" formControlName="price" style="width: 100%; padding: 8px;">
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <label>Quantité en stock</label>
+      <input type="number" formControlName="quantity" style="width: 100%; padding: 8px;">
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <label>Votre ID Vendeur (ex: copier/coller un ID user)</label>
+      <input type="text" formControlName="userId" style="width: 100%; padding: 8px;">
+    </div>
+
+    <div style="margin-bottom: 1rem; border: 2px dashed #ccc; padding: 20px; text-align: center;">
+      <label>Photo du produit</label><br>
+      <input type="file" (change)="onFileSelected($event)" accept="image/*">
+    </div>
+
+    <button type="submit"
+            [disabled]="productForm.invalid || !selectedFile"
+            style="background: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer;">
+      Mettre en vente
+    </button>
+  </form>
+</div>

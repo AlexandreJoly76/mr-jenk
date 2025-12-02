@@ -1,0 +1,46 @@
+<div class="signup-container" style="max-width: 400px; margin: 2rem auto; padding: 1rem; border: 1px solid #ddd;">
+  <h2>Inscription Sécurisée 🔒</h2>
+
+  @if (message()) {
+    <div style="background: #e0f7fa; padding: 10px; margin-bottom: 10px;">
+      {{ message() }}
+    </div>
+  }
+
+  <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+
+    <div style="margin-bottom: 1rem;">
+      <label for="name">Nom complet</label>
+      <input id="name" type="text" formControlName="name" style="width: 100%; padding: 8px;">
+      @if (signupForm.controls.name.touched && signupForm.controls.name.invalid) {
+        <small style="color: red;">Nom trop court</small>
+      }
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <label for="email">Email</label>
+      <input id="email" type="email" formControlName="email" style="width: 100%; padding: 8px;">
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <label for="password">Mot de passe</label>
+      <input id="password" type="password" formControlName="password" style="width: 100%; padding: 8px;">
+      @if (signupForm.controls.password.touched && signupForm.controls.password.invalid) {
+        <small style="color: red;">6 caractères minimum</small>
+      }
+    </div>
+
+    <div style="margin-bottom: 1rem;">
+      <label for="role">Je suis un :</label>
+      <select id="role" formControlName="role" style="width: 100%; padding: 8px;">
+        <option value="CLIENT">Client (Acheteur)</option>
+        <option value="SELLER">Vendeur</option>
+      </select>
+    </div>
+
+    <button type="submit" [disabled]="signupForm.invalid" style="padding: 10px 20px; cursor: pointer; background: #007bff; color: white; border: none;">
+      S'inscrire
+    </button>
+
+  </form>
+</div>

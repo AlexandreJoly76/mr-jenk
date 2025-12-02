@@ -19,5 +19,7 @@ public class Product {
     private String name;
     private String description;
     private BigDecimal price;
-    private String sellerId; // Lien vers le User Service (on stocke juste l'ID)
+    private String userId; // Lien vers le User Service (on stocke juste l'ID)
+    private String imageId;
+    private Integer quantity;
 }

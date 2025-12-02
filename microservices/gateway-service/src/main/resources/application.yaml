@@ -8,6 +8,16 @@ spring:
     gateway:
       server:
         webflux:
+          globalcors:
+            cors-configurations:
+              '[/**]': # Pour toutes les routes
+                allowedOrigins: "http://localhost:4200" # Autorise Angular
+                allowedMethods: # Autorise tout
+                  - GET
+                  - POST
+                  - PUT
+                  - DELETE
+                allowedHeaders: "*"
           discovery:
             locator:
               enabled: false

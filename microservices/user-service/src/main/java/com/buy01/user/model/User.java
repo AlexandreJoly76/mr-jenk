@@ -16,7 +16,9 @@ public class User {
 
     @Id // La clé unique (générée par Mongo)
     private String id;
-    private String username;
+    private String name;
     private String email;
-    // On ajoutera le mot de passe plus tard
+    private String password;
+    private Role role;
+    private String avatar;
 }
