@@ -1,0 +1,56 @@
+services:
+  # --- Base de Données MongoDB ---
+  mongodb:
+    image: mongo:6.0
+    container_name: buy01-mongo
+    restart: unless-stopped
+    ports:
+      - "27017:27017" # Port standard Mongo
+    environment:
+      - MONGO_INITDB_ROOT_USERNAME=admin
+      - MONGO_INITDB_ROOT_PASSWORD=password
+    volumes:
+      - mongo-data:/data/db
+
+  # --- Interface Web pour MongoDB ---
+  mongo-express:
+    image: mongo-express
+    container_name: buy01-mongo-express
+    restart: unless-stopped
+    ports:
+      - "8081:8081" # On y accédera via http://localhost:8081
+    environment:
+      - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
+      - ME_CONFIG_MONGODB_ADMINPASSWORD=password
+      - ME_CONFIG_MONGODB_URL=mongodb://admin:password@mongodb:27017/
+      - ME_CONFIG_BASICAUTH=false # Pas de login pour l'interface web (dev only)
+    depends_on:
+      - mongodb
+
+  # --- Zookeeper (Requis pour Kafka) ---
+  zookeeper:
+    image: confluentinc/cp-zookeeper:7.4.0
+    container_name: buy01-zookeeper
+    environment:
+      ZOOKEEPER_CLIENT_PORT: 2181
+      ZOOKEEPER_TICK_TIME: 2000
+    ports:
+      - "2181:2181"
+
+  # --- Kafka (Messagerie) ---
+  kafka:
+    image: confluentinc/cp-kafka:7.4.0
+    container_name: buy01-kafka
+    depends_on:
+      - zookeeper
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_BROKER_ID: 1
+      KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
+      # Configuration critique pour que tes services Java (sur l'hôte) puissent parler à Kafka (dans le conteneur)
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+
+volumes:
+  mongo-data: # Pour ne pas perdre tes données si on éteint le conteneur

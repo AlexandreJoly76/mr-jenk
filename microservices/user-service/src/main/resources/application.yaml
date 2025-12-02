@@ -1,0 +1,15 @@
+server:
+  port: 8082 # Port unique (8080=Gateway, 8081=MongoExpress, 8761=Eureka)
+
+spring:
+  application:
+    name: user-service
+  data:
+    mongodb:
+      # Format: mongodb://user:pass@host:port/databaseName?options
+      uri: mongodb://admin:password@localhost:27017/buy01_user_db?authSource=admin
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

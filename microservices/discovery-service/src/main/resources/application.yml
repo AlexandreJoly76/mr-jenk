@@ -1,0 +1,11 @@
+server:
+  port: 8761 # Port standard pour Eureka
+
+spring:
+  application:
+    name: discovery-service
+
+eureka:
+  client:
+    register-with-eureka: false # C'est moi le serveur, je ne m'enregistre pas moi-même !
+    fetch-registry: false       # Je n'ai pas besoin de récupérer l'annuaire, je SUIS l'annuaire.

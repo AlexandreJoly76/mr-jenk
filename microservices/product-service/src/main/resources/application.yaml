@@ -1,0 +1,15 @@
+server:
+  port: 8083
+
+spring:
+  application:
+    name: product-service
+  data:
+    mongodb:
+      # Note le nom de la base à la fin : buy01_product_db
+      uri: mongodb://admin:password@localhost:27017/buy01_product_db?authSource=admin
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/
