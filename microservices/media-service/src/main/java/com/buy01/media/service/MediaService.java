@@ -22,4 +22,8 @@ public class MediaService {
                 .data(file.getBytes()) // Convertit le fichier en tableau de bytes
                 .build());
     }
+    // --- AJOUT ---
+    public void deleteImage(String id) {
+        mediaRepository.deleteById(id);
+    }
 }

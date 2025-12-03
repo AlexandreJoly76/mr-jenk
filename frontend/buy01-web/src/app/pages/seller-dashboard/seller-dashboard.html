@@ -1,0 +1,30 @@
+<div style="padding: 20px;">
+  <div style="display: flex; justify-content: space-between; align-items: center;">
+    <h2>Mon Tableau de Bord Vendeur 💼</h2>
+    <a routerLink="/sell" style="background: #007bff; color: white; padding: 10px 15px; text-decoration: none; border-radius: 5px;">
+      + Nouveau Produit
+    </a>
+  </div>
+
+  <hr>
+
+  @if (myProducts().length === 0) {
+    <p>Vous n'avez aucun produit en vente pour l'instant.</p>
+  }
+
+  <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+    @for (product of myProducts(); track product.id) {
+      <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: white;">
+        <h3>{{ product.name }}</h3>
+        <p style="color: #666;">{{ product.description }}</p>
+        <p><strong>Prix :</strong> {{ product.price }} €</p>
+        <p><strong>Stock :</strong> {{ product.quantity }}</p>
+
+        <button (click)="delete(product.id)"
+                style="background: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer; width: 100%;">
+          Supprimer
+        </button>
+      </div>
+    }
+  </div>
+</div>

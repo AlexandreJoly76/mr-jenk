@@ -28,12 +28,6 @@
       <label>Quantité en stock</label>
       <input type="number" formControlName="quantity" style="width: 100%; padding: 8px;">
     </div>
-
-    <div style="margin-bottom: 1rem;">
-      <label>Votre ID Vendeur (ex: copier/coller un ID user)</label>
-      <input type="text" formControlName="userId" style="width: 100%; padding: 8px;">
-    </div>
-
     <div style="margin-bottom: 1rem; border: 2px dashed #ccc; padding: 20px; text-align: center;">
       <label>Photo du produit</label><br>
       <input type="file" (change)="onFileSelected($event)" accept="image/*">

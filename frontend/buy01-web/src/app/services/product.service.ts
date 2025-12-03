@@ -29,4 +29,13 @@ export class ProductService {
     return this.http.post<Product>(this.apiUrl, product);
   }
 
+  getProductsBySeller(userId: string): Observable<Product[]> {
+    return this.http.get<Product[]>(`${this.apiUrl}/seller/${userId}`);
+  }
+
+  // Supprimer un produit
+  deleteProduct(productId: string): Observable<void> {
+    return this.http.delete<void>(`${this.apiUrl}/${productId}`);
+  }
+
 }

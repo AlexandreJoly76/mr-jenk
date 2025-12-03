@@ -2,6 +2,7 @@ import { Component, inject, signal } from '@angular/core';
 import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
 import { Media } from '../../services/media';
+import {UserService} from '../../services/user.service';
 
 @Component({
   selector: 'app-create-product',
@@ -13,6 +14,7 @@ export class CreateProduct {
   private fb = inject(FormBuilder);
   private productService = inject(ProductService);
   private mediaService = inject(Media);
+  private userService = inject(UserService);
 
   message = signal<string>('');
 
@@ -24,8 +26,18 @@ export class CreateProduct {
     description: ['', Validators.required],
     price: [0, [Validators.required, Validators.min(0.1)]],
     quantity: [1, [Validators.required, Validators.min(1)]], // Ajout
-    userId: ['', Validators.required] // Renommé
   });
+
+  currentUser: any = null;
+
+  ngOnInit() {
+    // Au chargement, on récupère les infos du token
+    this.currentUser = this.userService.getUserInfoFromToken();
+
+    if (!this.currentUser) {
+      this.message.set("Attention : Vous n'êtes pas connecté !");
+    }
+  }
 
   // Méthode déclenchée quand l'utilisateur choisit un fichier
   onFileSelected(event: any) {
@@ -51,7 +63,8 @@ export class CreateProduct {
         // 2. Ensuite, on crée le produit avec l'ID de l'image
         const newProduct = {
           ...this.productForm.getRawValue(),
-          imageId: mediaResponse.id
+          imageId: mediaResponse.id,
+          userId: this.currentUser.id,
         };
 
         this.createProductInBackend(newProduct);
