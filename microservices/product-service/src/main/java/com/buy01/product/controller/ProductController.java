@@ -65,8 +65,10 @@ public class ProductController {
 
         if (product != null) {
             // 2. Si le produit a une image, on prévient Kafka
-            if (product.getImageId() != null) {
-                productProducer.sendImageDeletionRequest(product.getImageId());
+            if (product.getImageIds() != null) {
+                for (String imageId : product.getImageIds()) {
+                    productProducer.sendImageDeletionRequest(imageId);
+                }
             }
             // 3. On supprime le produit
             productRepository.deleteById(id);

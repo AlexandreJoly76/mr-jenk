@@ -2,6 +2,7 @@ import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@ang
 import { Product, ProductService } from './services/product.service';
 import {RouterLink, RouterOutlet} from '@angular/router';
 import {NgOptimizedImage} from '@angular/common';
+import {UserService} from './services/user.service';
 
 @Component({
   selector: 'app-root',
@@ -15,6 +16,7 @@ import {NgOptimizedImage} from '@angular/common';
 export class App implements OnInit {
   // RÈGLE : Injection de dépendance via inject()
   private productService = inject(ProductService);
+  public userService=inject(UserService);
 
   // RÈGLE : Gestion d'état via Signal
   // On initialise avec un tableau vide

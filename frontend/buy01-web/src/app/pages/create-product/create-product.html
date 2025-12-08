@@ -29,12 +29,19 @@
       <input type="number" formControlName="quantity" style="width: 100%; padding: 8px;">
     </div>
     <div style="margin-bottom: 1rem; border: 2px dashed #ccc; padding: 20px; text-align: center;">
-      <label>Photo du produit</label><br>
-      <input type="file" (change)="onFileSelected($event)" accept="image/*">
+      <label>Photos du produit</label><br>
+      <input type="file" (change)="onFileSelected($event)" multiple accept="image/*">
+      @if (selectedFiles.length > 0) {
+        <ul style="text-align: left; margin-top: 15px; color: #666;">
+          @for (file of selectedFiles; track file.name) {
+            <li>📸 {{ file.name }}</li>
+          }
+        </ul>
+      }
     </div>
 
     <button type="submit"
-            [disabled]="productForm.invalid || !selectedFile"
+            [disabled]="productForm.invalid || !selectedFiles"
             style="background: #28a745; color: white; padding: 10px 20px; border: none; cursor: pointer;">
       Mettre en vente
     </button>

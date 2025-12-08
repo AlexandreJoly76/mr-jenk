@@ -1,6 +1,7 @@
-import { Injectable, inject } from '@angular/core';
+import {Injectable, inject, signal} from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import {Observable, tap} from 'rxjs';
+import {Router} from '@angular/router';
 
 // Le format de données qu'on envoie au backend
 export interface UserRequest {
@@ -8,6 +9,7 @@ export interface UserRequest {
   email: string;
   password: string;  // Ajout
   role: 'CLIENT' | 'SELLER'; // Ajout (Enum strict)
+  avatar?: string;
 }
 
 // Le format de réponse (avec l'ID généré par Mongo)
@@ -28,18 +30,44 @@ export interface LoginRequest {
 })
 export class UserService {
   private http = inject(HttpClient);
+  private router = inject(Router);
   // On passe par le Gateway (port 8080) -> User Service
   private registerUrl = 'https://localhost:8080/user-service/api/users/register';
   private loginUrl = 'https://localhost:8080/user-service/api/users/login'; // Nouvelle URL
+
+  currentUser = signal<any>(null);
+
+  constructor() {
+    // Au démarrage de l'appli, on vérifie si un token existe déjà
+    this.restoreUserFromToken();
+  }
+
+  // Méthode pour lire le token et mettre à jour le signal
+  private restoreUserFromToken() {
+    const token = localStorage.getItem('token');
+    if (token) {
+      try {
+        const payload = JSON.parse(atob(token.split('.')[1]));
+        this.currentUser.set(payload); // On met les infos dans le signal
+      } catch (e) {
+        console.error("Token invalide", e);
+        this.logout();
+      }
+    }
+  }
 
   register(user: UserRequest): Observable<UserResponse> {
     return this.http.post<UserResponse>(this.registerUrl, user);
   }
 
-  // --- AJOUT LOGIN ---
   login(credentials: LoginRequest): Observable<string> {
-    // Note : On précise { responseType: 'text' } car le backend renvoie une String brute, pas un objet JSON
-    return this.http.post(this.loginUrl, credentials, { responseType: 'text' });
+    return this.http.post(this.loginUrl, credentials, { responseType: 'text' }).pipe(
+      // Ce TAP est vital pour la mise à jour sans refresh
+      tap((token) => {
+        localStorage.setItem('token', token);
+        this.restoreUserFromToken(); // <--- C'est ça qui réveille le Header !
+      })
+    );
   }
 
   getUserInfoFromToken(): any {
@@ -62,8 +90,9 @@ export class UserService {
     return !!localStorage.getItem('token');
   }
 
-  // Méthode pour se déconnecter
   logout() {
     localStorage.removeItem('token');
+    this.currentUser.set(null); // On vide le signal
+    this.router.navigate(['/login']); // Redirection
   }
 }

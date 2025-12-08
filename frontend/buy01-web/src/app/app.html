@@ -1,9 +1,49 @@
-<nav style="background: #333; color: white; padding: 1rem; margin-bottom: 20px;">
-  <a routerLink="/" style="color: white; margin-right: 20px; text-decoration: none;">Accueil</a>
-  <a routerLink="/signup" style="color: white; margin-right: 20px; text-decoration: none;">Inscription</a>
-  <a routerLink="/login" style="color: white; margin-right: 20px; text-decoration: none;">Connexion</a>
-  <a routerLink="/dashboard" style="color: #ff9800; margin-right: 20px; text-decoration: none;">Mon Espace Vendeur</a>
+<nav style="background: #333; color: white; padding: 0.8rem 1.5rem; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
+
+  <div style="display: flex; gap: 20px; align-items: center;">
+    <a routerLink="/" style="color: white; text-decoration: none; font-weight: bold; font-size: 1.2rem;">Buy-01 🛒</a>
+
+    @if (userService.currentUser()?.role === 'SELLER') {
+      <a routerLink="/dashboard" style="color: #ff9800; text-decoration: none;">Mon Espace Vendeur</a>
+    }
+  </div>
+
+  <div style="display: flex; gap: 15px; align-items: center;">
+
+    @if (userService.currentUser(); as user) {
+
+      <div style="display: flex; align-items: center; gap: 10px;">
+        @if (user.avatar) {
+          <img [ngSrc]="'https://localhost:8080/media-service/api/media/' + user.avatar"
+               height="35"
+                width="35"
+               style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid white;" alt="user Avatar">
+        } @else if(userService.currentUser()?.role === 'SELLER') {
+          <div style="width: 35px; height: 35px; border-radius: 50%; background: #555; display: flex; align-items: center; justify-content: center; font-weight: bold;">
+            {{ user.sub.charAt(0).toUpperCase() }}
+          </div>
+        }
+
+        <span>Bonjour, <strong>{{ user.sub }}</strong></span>
+
+        <button (click)="userService.logout()"
+                style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 10px;">
+          Déconnexion
+        </button>
+      </div>
+
+    } @else {
+
+      <a routerLink="/login" style="color: white; text-decoration: none;">Connexion</a>
+      <a routerLink="/signup" style="background: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none;">Inscription</a>
+
+    }
+  </div>
 </nav>
+
+<div class="container" style="padding: 20px;">
+  <router-outlet></router-outlet>
+</div>
 
 <div class="container" style="padding: 20px;">
   <router-outlet></router-outlet>
@@ -15,7 +55,19 @@
 <ul>
   @for (product of products(); track product.id) {
     <li style="margin-bottom: 10px; border: 1px solid #ccc; padding: 10px;">
-      <h3>{{ product.name }} {{product.price}}</h3>
-    </li>
+
+      @if (product.imageIds && product.imageIds.length > 0) {
+        <div style="display: flex; gap: 10px; overflow-x: auto; margin-bottom: 10px;">
+          @for (imageId of product.imageIds; track imageId) {
+            <img [ngSrc]="'https://localhost:8080/media-service/api/media/' + imageId"
+                 alt="{{ product.name }}"
+                 height="80"
+                  width="80"
+                 style="max-width: 150px; height: 100px; object-fit: cover; border-radius: 5px;">
+          }
+        </div>
+      }
+
+      <h3>{{ product.name }}</h3>
   }
 </ul>

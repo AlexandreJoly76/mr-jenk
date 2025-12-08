@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 import java.math.BigDecimal;
+import java.util.List;
 
 @Data
 @AllArgsConstructor
@@ -20,6 +21,6 @@ public class Product {
     private String description;
     private BigDecimal price;
     private String userId; // Lien vers le User Service (on stocke juste l'ID)
-    private String imageId;
+    private List<String> imageIds;
     private Integer quantity;
 }

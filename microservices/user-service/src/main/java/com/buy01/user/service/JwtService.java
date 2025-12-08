@@ -24,6 +24,7 @@ public class JwtService {
         // On ajoute l'ID et le Role dans le token !
         claims.put("id", user.getId());
         claims.put("role", user.getRole());
+        claims.put("avatar", user.getAvatar());
 
         return createToken(claims, user.getName());
     }

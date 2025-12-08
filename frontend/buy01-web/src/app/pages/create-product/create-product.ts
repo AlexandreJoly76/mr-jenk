@@ -3,6 +3,8 @@ import { FormBuilder, ReactiveFormsModule, Validators } from '@angular/forms';
 import { ProductService } from '../../services/product.service';
 import { Media } from '../../services/media';
 import {UserService} from '../../services/user.service';
+import { forkJoin } from 'rxjs';
+import {Router} from '@angular/router'; // <--- IMPORT IMPORTANT
 
 @Component({
   selector: 'app-create-product',
@@ -15,11 +17,12 @@ export class CreateProduct {
   private productService = inject(ProductService);
   private mediaService = inject(Media);
   private userService = inject(UserService);
+  private router = inject(Router);
 
   message = signal<string>('');
 
-  // Variable pour stocker le fichier sélectionné par l'utilisateur
-  selectedFile: File | null = null;
+// CHangement : On stocke maintenant un tableau de fichiers
+  selectedFiles: File[] = [];
 
   productForm = this.fb.nonNullable.group({
     name: ['', Validators.required],
@@ -39,49 +42,56 @@ export class CreateProduct {
     }
   }
 
-  // Méthode déclenchée quand l'utilisateur choisit un fichier
+// Nouvelle méthode de sélection
   onFileSelected(event: any) {
-    const file = event.target.files[0];
-    if (file) {
-      this.selectedFile = file;
-    }
+    // event.target.files est un "FileList", on le convertit en vrai tableau []
+    this.selectedFiles = Array.from(event.target.files);
   }
 
   onSubmit() {
-    if (this.productForm.invalid || !this.selectedFile) {
-      this.message.set("Formulaire invalide ou image manquante.");
+    if (this.productForm.invalid || this.selectedFiles.length === 0 || !this.currentUser) {
+      this.message.set("Formulaire invalide.");
       return;
     }
 
-    this.message.set("Upload de l'image en cours...");
+    this.message.set(`Upload de ${this.selectedFiles.length} images en cours...`);
 
-    // 1. D'abord, on upload l'image
-    this.mediaService.upload(this.selectedFile).subscribe({
-      next: (mediaResponse) => {
-        console.log("Image uploadée, ID:", mediaResponse.id);
+    // 1. On prépare toutes les requêtes d'upload
+    // On transforme chaque fichier (File) en un appel au service (Observable)
+    const uploadRequests = this.selectedFiles.map(file => this.mediaService.upload(file));
 
-        // 2. Ensuite, on crée le produit avec l'ID de l'image
+    // 2. forkJoin lance tout en parallèle et attend la fin
+    forkJoin(uploadRequests).subscribe({
+      next: (responses) => {
+        // 'responses' est un tableau contenant les réponses du Media Service
+        // On extrait juste les IDs
+        const uploadedImageIds = responses.map(res => res.id);
+        console.log("Tous les uploads sont finis. IDs:", uploadedImageIds);
+
+        // 3. On crée le produit avec la liste d'IDs
         const newProduct = {
           ...this.productForm.getRawValue(),
-          imageId: mediaResponse.id,
-          userId: this.currentUser.id,
+          imageIds: uploadedImageIds, // <-- La nouvelle liste
+          userId: this.currentUser.id
         };
 
         this.createProductInBackend(newProduct);
+        this.router.navigate(['/dashboard']);
       },
       error: (err) => {
         console.error(err);
-        this.message.set("Erreur lors de l'upload de l'image.");
+        this.message.set("Erreur lors de l'upload des images.");
       }
     });
   }
 
   private createProductInBackend(productData: any) {
+    // ... inchangé, sauf qu'on remet à zéro la liste des fichiers
     this.productService.createProduct(productData).subscribe({
       next: (prod) => {
-        this.message.set(`Produit "${prod.name}" créé avec succès !`);
+        this.message.set(`Produit "${prod.name}" créé avec ${prod.imageIds?.length} images !`);
         this.productForm.reset();
-        this.selectedFile = null;
+        this.selectedFiles = []; // Reset de la sélection
       },
       error: (err) => {
         console.error(err);

@@ -28,10 +28,7 @@ export class Login {
     const credentials = this.loginForm.getRawValue();
 
     this.userService.login(credentials).subscribe({
-      next: (token) => {
-        // 1. On stocke le token dans le navigateur
-        localStorage.setItem('token', token);
-
+      next: () => {
         // 2. On affiche un message (optionnel car on redirige vite)
         this.message.set('Connexion réussie ! Redirection...');
 

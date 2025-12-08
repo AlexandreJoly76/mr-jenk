@@ -38,6 +38,14 @@
       </select>
     </div>
 
+    @if (signupForm.controls.role.value === 'SELLER') {
+      <div style="margin-bottom: 1rem; border-left: 3px solid #007bff; padding-left: 10px;">
+        <label for="avatar">Avatar du vendeur (Optionnel)</label>
+        <input type="file" (change)="onFileSelected($event)" accept="image/*" style="margin-top: 5px;">
+        <small style="display:block; color: gray;">JPG ou PNG uniquement</small>
+      </div>
+    }
+
     <button type="submit" [disabled]="signupForm.invalid" style="padding: 10px 20px; cursor: pointer; background: #007bff; color: white; border: none;">
       S'inscrire
     </button>
