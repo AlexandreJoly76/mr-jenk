@@ -29,8 +29,8 @@ export interface LoginRequest {
 export class UserService {
   private http = inject(HttpClient);
   // On passe par le Gateway (port 8080) -> User Service
-  private registerUrl = 'http://localhost:8080/user-service/api/users/register';
-  private loginUrl = 'http://localhost:8080/user-service/api/users/login'; // Nouvelle URL
+  private registerUrl = 'https://localhost:8080/user-service/api/users/register';
+  private loginUrl = 'https://localhost:8080/user-service/api/users/login'; // Nouvelle URL
 
   register(user: UserRequest): Observable<UserResponse> {
     return this.http.post<UserResponse>(this.registerUrl, user);

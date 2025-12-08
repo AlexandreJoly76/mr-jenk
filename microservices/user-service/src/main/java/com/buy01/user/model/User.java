@@ -7,6 +7,7 @@ import lombok.NoArgsConstructor;
 import org.springframework.data.annotation.Id;
 import org.springframework.data.mongodb.core.mapping.Document;
 
+
 @Data // Lombok: Génère Getters, Setters, toString...
 @AllArgsConstructor // Lombok: Constructeur avec tous les arguments
 @NoArgsConstructor // Lombok: Constructeur vide
@@ -17,7 +18,10 @@ public class User {
     @Id // La clé unique (générée par Mongo)
     private String id;
     private String name;
+
+    @org.springframework.data.mongodb.core.index.Indexed(unique = true)
     private String email;
+
     private String password;
     private Role role;
     private String avatar;

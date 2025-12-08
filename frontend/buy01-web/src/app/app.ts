@@ -1,13 +1,14 @@
 import { Component, OnInit, inject, signal, ChangeDetectionStrategy } from '@angular/core';
 import { Product, ProductService } from './services/product.service';
 import {RouterLink, RouterOutlet} from '@angular/router';
+import {NgOptimizedImage} from '@angular/common';
 
 @Component({
   selector: 'app-root',
   // RÈGLE : Pas de 'standalone: true' explicite (c'est le défaut)
   // RÈGLE : OnPush pour la performance
   changeDetection: ChangeDetectionStrategy.OnPush,
-  imports: [RouterOutlet,RouterLink], // Plus besoin de CommonModule grâce au Control Flow (@for, @if)
+  imports: [RouterOutlet, RouterLink, NgOptimizedImage], // Plus besoin de CommonModule grâce au Control Flow (@for, @if)
   templateUrl: './app.html',
   styleUrl: './app.css'
 })

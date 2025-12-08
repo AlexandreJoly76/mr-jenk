@@ -1,43 +1,36 @@
 services:
-  # --- Base de Données MongoDB ---
+  # --- INFRASTRUCTURE ---
   mongodb:
     image: mongo:6.0
     container_name: buy01-mongo
-    restart: unless-stopped
     ports:
-      - "27017:27017" # Port standard Mongo
+      - "27017:27017"
     environment:
       - MONGO_INITDB_ROOT_USERNAME=admin
       - MONGO_INITDB_ROOT_PASSWORD=password
     volumes:
       - mongo-data:/data/db
 
-  # --- Interface Web pour MongoDB ---
   mongo-express:
     image: mongo-express
     container_name: buy01-mongo-express
-    restart: unless-stopped
     ports:
-      - "8081:8081" # On y accédera via http://localhost:8081
+      - "8081:8081"
     environment:
       - ME_CONFIG_MONGODB_ADMINUSERNAME=admin
       - ME_CONFIG_MONGODB_ADMINPASSWORD=password
       - ME_CONFIG_MONGODB_URL=mongodb://admin:password@mongodb:27017/
-      - ME_CONFIG_BASICAUTH=false # Pas de login pour l'interface web (dev only)
+      - ME_CONFIG_BASICAUTH=false
     depends_on:
       - mongodb
 
-  # --- Zookeeper (Requis pour Kafka) ---
   zookeeper:
     image: confluentinc/cp-zookeeper:7.4.0
     container_name: buy01-zookeeper
     environment:
       ZOOKEEPER_CLIENT_PORT: 2181
       ZOOKEEPER_TICK_TIME: 2000
-    ports:
-      - "2181:2181"
 
-  # --- Kafka (Messagerie) ---
   kafka:
     image: confluentinc/cp-kafka:7.4.0
     container_name: buy01-kafka
@@ -48,9 +41,75 @@ services:
     environment:
       KAFKA_BROKER_ID: 1
       KAFKA_ZOOKEEPER_CONNECT: zookeeper:2181
-      # Configuration critique pour que tes services Java (sur l'hôte) puissent parler à Kafka (dans le conteneur)
-      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      # Configuration Hybride : Permet l'accès depuis Docker (kafka:29092) ET depuis l'hôte (localhost:9092)
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://kafka:29092,PLAINTEXT_HOST://localhost:9092
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: PLAINTEXT:PLAINTEXT,PLAINTEXT_HOST:PLAINTEXT
+      KAFKA_INTER_BROKER_LISTENER_NAME: PLAINTEXT
       KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
 
+  # --- MICROSERVICES ---
+
+  discovery-service:
+    build: ../microservices/discovery-service
+    container_name: buy01-discovery
+    ports:
+      - "8761:8761"
+
+  gateway-service:
+    build: ../microservices/gateway-service
+    container_name: buy01-gateway
+    ports:
+      - "8080:8080" # HTTPS
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_PROFILES_ACTIVE=docker
+    depends_on:
+      - discovery-service
+
+  user-service:
+    build: ../microservices/user-service
+    container_name: buy01-user
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      # On remplace localhost par le nom du service 'mongodb'
+      - SPRING_DATA_MONGODB_URI=mongodb://admin:password@mongodb:27017/buy01_user_db?authSource=admin
+    depends_on:
+      - discovery-service
+      - mongodb
+
+  product-service:
+    build: ../microservices/product-service
+    container_name: buy01-product
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_DATA_MONGODB_URI=mongodb://admin:password@mongodb:27017/buy01_product_db?authSource=admin
+      # On remplace localhost par 'kafka' et on utilise le port interne 29092
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+    depends_on:
+      - discovery-service
+      - mongodb
+      - kafka
+
+  media-service:
+    build: ../microservices/media-service
+    container_name: buy01-media
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      - SPRING_DATA_MONGODB_URI=mongodb://admin:password@mongodb:27017/buy01_media_db?authSource=admin
+      - SPRING_KAFKA_BOOTSTRAP_SERVERS=kafka:29092
+    depends_on:
+      - discovery-service
+      - mongodb
+      - kafka
+
+  # --- FRONTEND ---
+  frontend:
+    build: ../frontend/buy01-web
+    container_name: buy01-web
+    ports:
+      - "4200:80" # On map le port 80 du conteneur (Nginx) sur le 4200 de ton PC
+    depends_on:
+      - gateway-service
+
 volumes:
-  mongo-data: # Pour ne pas perdre tes données si on éteint le conteneur
+  mongo-data:

@@ -2,10 +2,11 @@ import { Component, OnInit, inject, signal } from '@angular/core';
 import { Product, ProductService } from '../../services/product.service';
 import { UserService } from '../../services/user.service';
 import { RouterLink } from '@angular/router';
+import {NgOptimizedImage} from '@angular/common';
 
 @Component({
   selector: 'app-seller-dashboard',
-  imports: [RouterLink], // Pour le lien "Ajouter un produit"
+  imports: [RouterLink, NgOptimizedImage], // Pour le lien "Ajouter un produit"
   templateUrl: './seller-dashboard.html',
   styleUrl: './seller-dashboard.css'
 })

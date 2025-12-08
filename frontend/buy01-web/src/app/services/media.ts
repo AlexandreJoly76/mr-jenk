@@ -14,7 +14,7 @@ export interface MediaResponse {
 export class Media {
   private http = inject(HttpClient);
   // URL vers le Media Service via Gateway
-  private apiUrl = 'http://localhost:8080/media-service/api/media';
+  private apiUrl = 'https://localhost:8080/media-service/api/media';
 
   upload(file: File): Observable<MediaResponse> {
     // Pour envoyer un fichier, on doit utiliser FormData, pas du JSON classique
