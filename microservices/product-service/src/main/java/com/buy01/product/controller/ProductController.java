@@ -5,6 +5,7 @@ import com.buy01.product.repository.ProductRepository;
 import com.buy01.product.service.ProductProducer;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -40,7 +41,7 @@ public class ProductController {
     }
 
     @PostMapping
-    public Product createProduct(@RequestBody Product product, @RequestHeader("Authorization") String token) {
+    public Product createProduct(@RequestBody @Valid Product product, @RequestHeader("Authorization") String token) {
         verifySellerRole(token);
         return productRepository.save(product);
     }

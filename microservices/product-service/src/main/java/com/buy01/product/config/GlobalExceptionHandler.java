@@ -1,6 +1,5 @@
-package com.buy01.user.config;
+package com.buy01.product.config;
 
-import org.springframework.dao.DuplicateKeyException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.FieldError;
@@ -13,13 +12,6 @@ import java.util.Map;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-    @ExceptionHandler(DuplicateKeyException.class)
-    public ResponseEntity<Map<String, String>> handleDuplicateKey(DuplicateKeyException ex) {
-        return ResponseEntity
-                .status(HttpStatus.CONFLICT) // 409 Conflict
-                .body(Map.of("error", "Cet email est déjà utilisé !"));
-    }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)
     public ResponseEntity<Map<String, String>> handleValidationExceptions(MethodArgumentNotValidException ex) {

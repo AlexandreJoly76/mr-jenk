@@ -2,6 +2,7 @@ package com.buy01.user.controller;
 
 import com.buy01.user.model.User;
 import com.buy01.user.service.UserService;
+import jakarta.validation.Valid;
 import lombok.Data; // Import Lombok
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
@@ -14,7 +15,7 @@ public class UserController {
     private final UserService userService;
 
     @PostMapping("/register")
-    public User register(@RequestBody User user) {
+    public User register(@RequestBody @Valid User user) {
         return userService.registerUser(user);
     }
 
