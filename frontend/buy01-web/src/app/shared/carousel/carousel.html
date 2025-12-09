@@ -1,0 +1,23 @@
+@if (imageIds.length > 0) {
+  <div class="carousel-container">
+
+    <img [ngSrc]="currentImageUrl() || 'https://via.placeholder.com/200'"
+         alt="Image produit"
+         width="200"
+          height="200"
+         class="carousel-image">
+
+    @if (imageIds.length > 1) {
+      <button class="nav-btn prev" (click)="previous()">
+        &#10094; </button>
+
+      <button class="nav-btn next" (click)="next()">
+        &#10095; </button>
+
+      <div class="indicator">
+        {{ currentIndex() + 1 }} / {{ imageIds.length }}
+      </div>
+    }
+
+  </div>
+}

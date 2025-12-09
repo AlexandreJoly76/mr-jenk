@@ -1,0 +1,24 @@
+<h3>Catalogue de nos produits</h3>
+@if (products().length === 0) { <p>Pas de produits...</p> }
+<div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(250px, 1fr)); gap: 20px;">
+  @for (product of products(); track product.id) {
+    <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: white;">
+      @if (product.imageIds && product.imageIds.length > 0) {
+        <app-carousel [imageIds]="product.imageIds ?? []"></app-carousel>
+      }
+      <h3>{{ product.name }}</h3>
+      <p style="color: #666;">{{ product.description }}</p>
+      <p><strong>Prix :</strong> {{ product.price }} €</p>
+      <p><strong>Stock :</strong> {{ product.quantity }}</p>
+      @if (product.sellerName) {
+        <p style="font-size: 0.9rem; color: #555; font-style: italic;">
+          Vendu par : <strong>{{ product.sellerName }}</strong>
+        </p>
+      }
+    <button
+            style="background: #5c8bd2; color: white; border: none; padding: 5px 10px; cursor: pointer; width: 100%; border-radius: 5px">
+      Acheter
+    </button>
+    </div>
+  }
+</div>

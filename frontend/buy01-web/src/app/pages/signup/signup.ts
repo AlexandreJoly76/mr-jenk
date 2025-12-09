@@ -51,7 +51,7 @@ export class Signup {
           // L'upload est fini, on a l'ID de l'image
           this.registerUser(formValues, mediaResponse.id);
         },
-        error: (err) => this.message.set("Erreur lors de l'upload de l'avatar.")
+        error: (err) => this.message.set("Format invalide pour l'avatar ou taille supérieure à 2MB.")
       });
 
     } else {
@@ -81,7 +81,7 @@ export class Signup {
       error: (err) => {
         // Gestion propre de l'erreur "Email déjà pris" (grâce au backend qu'on a fait avant)
         if (err.status === 409) {
-          this.message.set("Cet email est déjà utilisé !");
+          this.message.set("Cet email ou username est déjà utilisé !");
         } else {
           this.message.set("Erreur lors de l'inscription.");
         }

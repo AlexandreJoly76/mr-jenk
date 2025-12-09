@@ -8,6 +8,7 @@ spring:
     mongodb:
       # Format: mongodb://user:pass@host:port/databaseName?options
       uri: mongodb://admin:password@localhost:27017/buy01_user_db?authSource=admin
+      auto-index-creation: true
 
 eureka:
   client:

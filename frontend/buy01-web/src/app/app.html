@@ -44,30 +44,3 @@
 <div class="container" style="padding: 20px;">
   <router-outlet></router-outlet>
 </div>
-
-<div class="container" style="padding: 20px;">
-  <router-outlet></router-outlet>
-</div>
-
-<hr>
-<h3>Aperçu rapide des produits (Debug)</h3>
-@if (products().length === 0) { <p>Pas de produits...</p> }
-<ul>
-  @for (product of products(); track product.id) {
-    <li style="margin-bottom: 10px; border: 1px solid #ccc; padding: 10px;">
-
-      @if (product.imageIds && product.imageIds.length > 0) {
-        <div style="display: flex; gap: 10px; overflow-x: auto; margin-bottom: 10px;">
-          @for (imageId of product.imageIds; track imageId) {
-            <img [ngSrc]="'https://localhost:8080/media-service/api/media/' + imageId"
-                 alt="{{ product.name }}"
-                 height="80"
-                  width="80"
-                 style="max-width: 150px; height: 100px; object-fit: cover; border-radius: 5px;">
-          }
-        </div>
-      }
-
-      <h3>{{ product.name }}</h3>
-  }
-</ul>

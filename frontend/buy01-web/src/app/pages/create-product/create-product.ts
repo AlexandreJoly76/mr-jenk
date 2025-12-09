@@ -72,7 +72,8 @@ export class CreateProduct {
         const newProduct = {
           ...this.productForm.getRawValue(),
           imageIds: uploadedImageIds, // <-- La nouvelle liste
-          userId: this.currentUser.id
+          userId: this.currentUser.id,
+          sellerName: this.currentUser.sub
         };
 
         this.createProductInBackend(newProduct);

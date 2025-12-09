@@ -3,10 +3,11 @@ import { Product, ProductService } from '../../services/product.service';
 import { UserService } from '../../services/user.service';
 import { RouterLink } from '@angular/router';
 import {NgOptimizedImage} from '@angular/common';
+import {Carousel} from '../../shared/carousel/carousel';
 
 @Component({
   selector: 'app-seller-dashboard',
-  imports: [RouterLink, NgOptimizedImage], // Pour le lien "Ajouter un produit"
+  imports: [RouterLink, NgOptimizedImage, Carousel], // Pour le lien "Ajouter un produit"
   templateUrl: './seller-dashboard.html',
   styleUrl: './seller-dashboard.css'
 })

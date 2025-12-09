@@ -16,15 +16,7 @@
     @for (product of myProducts(); track product.id) {
       <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: white;">
         @if (product.imageIds && product.imageIds.length > 0) {
-          <div style="display: flex; gap: 5px; overflow-x: auto; padding-bottom: 10px;">
-            @for (imageId of product.imageIds; track imageId) {
-              <img [ngSrc]="'https://localhost:8080/media-service/api/media/' + imageId"
-                   alt="Photo produit"
-                   height="80"
-                    width="80"
-                   style="width: 80px; height: 80px; object-fit: cover; border-radius: 4px; border: 1px solid #eee;">
-            }
-          </div>
+          <app-carousel [imageIds]="product.imageIds ?? []"></app-carousel>
         }
         <h3>{{ product.name }}</h3>
         <p style="color: #666;">{{ product.description }}</p>
@@ -32,7 +24,7 @@
         <p><strong>Stock :</strong> {{ product.quantity }}</p>
 
         <button (click)="delete(product.id)"
-                style="background: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer; width: 100%;">
+                style="background: #dc3545; color: white; border: none; padding: 5px 10px; cursor: pointer; width: 100%; border-radius: 5px">
           Supprimer
         </button>
       </div>

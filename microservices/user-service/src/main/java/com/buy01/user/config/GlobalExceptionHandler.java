@@ -18,7 +18,7 @@ public class GlobalExceptionHandler {
     public ResponseEntity<Map<String, String>> handleDuplicateKey(DuplicateKeyException ex) {
         return ResponseEntity
                 .status(HttpStatus.CONFLICT) // 409 Conflict
-                .body(Map.of("error", "Cet email est déjà utilisé !"));
+                .body(Map.of("error", "Cet email ou cet username est déjà utilisé !"));
     }
 
     @ExceptionHandler(MethodArgumentNotValidException.class)

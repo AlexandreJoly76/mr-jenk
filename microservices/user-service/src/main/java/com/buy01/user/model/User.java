@@ -22,6 +22,7 @@ public class User {
     @Id // La clé unique (générée par Mongo)
     private String id;
     @NotBlank(message = "Le nom est obligatoire")
+    @Indexed(unique=true)
     private String name;
 
     @NotBlank(message = "L'email est obligatoire")

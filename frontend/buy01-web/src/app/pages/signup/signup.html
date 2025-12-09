@@ -20,6 +20,9 @@
     <div style="margin-bottom: 1rem;">
       <label for="email">Email</label>
       <input id="email" type="email" formControlName="email" style="width: 100%; padding: 8px;">
+      @if (signupForm.controls.email.touched && signupForm.controls.email.invalid) {
+        <small style="color: red;">Email invalide</small>
+      }
     </div>
 
     <div style="margin-bottom: 1rem;">

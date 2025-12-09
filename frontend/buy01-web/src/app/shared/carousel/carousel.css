@@ -1,0 +1,59 @@
+.carousel-container {
+  position: relative; /* Important pour positionner les boutons par dessus */
+  width: 100%;
+  height: 200px; /* Hauteur fixe pour la carte du dashboard */
+  background-color: #f4f4f4;
+  border-radius: 8px;
+  overflow: hidden; /* Cache ce qui dépasse */
+
+  .carousel-image {
+    width: auto;
+    height: 100%;
+    object-fit: fill; /* L'image remplit le cadre sans être déformée */
+    display: block;
+    margin: 0 auto; /* Centre l'image horizontalement */
+  }
+
+  /* Style des boutons de navigation */
+  .nav-btn {
+    position: absolute; /* Position absolue par rapport au container */
+    top: 50%;
+    transform: translateY(-50%); /* Centre verticalement parfaitement */
+    background-color: rgba(0, 0, 0, 0.3); /* Fond semi-transparent */
+    color: white;
+    border: none;
+    font-size: 1.5rem;
+    padding: 10px;
+    cursor: pointer;
+    z-index: 2; /* S'assure qu'ils sont au-dessus de l'image */
+    transition: background-color 0.3s;
+
+    &:hover {
+      background-color: rgba(0, 0, 0, 0.7);
+    }
+
+    &.prev {
+      left: 0;
+      border-top-right-radius: 5px;
+      border-bottom-right-radius: 5px;
+    }
+
+    &.next {
+      right: 0;
+      border-top-left-radius: 5px;
+      border-bottom-left-radius: 5px;
+    }
+  }
+
+  /* Style du petit indicateur "1/3" */
+  .indicator {
+    position: absolute;
+    bottom: 10px;
+    right: 10px;
+    background: rgba(0, 0, 0, 0.5);
+    color: white;
+    padding: 4px 8px;
+    border-radius: 10px;
+    font-size: 0.8rem;
+  }
+}

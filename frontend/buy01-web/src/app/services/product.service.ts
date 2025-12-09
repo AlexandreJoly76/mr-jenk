@@ -10,6 +10,7 @@ export interface Product {
   quantity: number;
   userId:string;
   imageIds?:string[];
+  sellerName:string;
 }
 
 @Injectable({

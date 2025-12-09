@@ -34,4 +34,6 @@ public class Product {
     private List<String> imageIds;
     @Min(value = 0, message = "La quantité ne peut pas être négative")
     private Integer quantity;
+
+    private String SellerName;
 }
