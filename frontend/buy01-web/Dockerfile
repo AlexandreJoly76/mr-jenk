@@ -1,7 +1,15 @@
-# Étape 1 : Serveur Web
 FROM nginx:alpine
-# On copie le résultat de ta compilation Angular (dossier dist) vers Nginx
+
+# Copie du build Angular
 COPY dist/buy01-web/browser /usr/share/nginx/html
-# On copie notre config Nginx personnalisée
+
+# Copie du certificat SSL
+COPY ssl /etc/nginx/ssl
+
+# Copie de la config nginx
 COPY nginx.conf /etc/nginx/conf.d/default.conf
-EXPOSE 80
+
+# Expose HTTP + HTTPS
+EXPOSE 443
+
+CMD ["nginx", "-g", "daemon off;"]

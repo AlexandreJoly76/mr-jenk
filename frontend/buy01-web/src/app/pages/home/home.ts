@@ -1,12 +1,10 @@
 import {Component, inject, OnInit, signal} from '@angular/core';
-import {NgOptimizedImage} from "@angular/common";
 import {Product, ProductService} from '../../services/product.service';
 import {Carousel} from '../../shared/carousel/carousel';
 
 @Component({
   selector: 'app-home',
   imports: [
-    NgOptimizedImage,
     Carousel
   ],
   templateUrl: './home.html',

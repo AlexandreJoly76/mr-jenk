@@ -4,7 +4,7 @@
   @for (product of products(); track product.id) {
     <div style="border: 1px solid #ddd; padding: 15px; border-radius: 8px; background: white;">
       @if (product.imageIds && product.imageIds.length > 0) {
-        <app-carousel [imageIds]="product.imageIds ?? []"></app-carousel>
+        <app-carousel [imageIds]="product.imageIds"></app-carousel>
       }
       <h3>{{ product.name }}</h3>
       <p style="color: #666;">{{ product.description }}</p>
