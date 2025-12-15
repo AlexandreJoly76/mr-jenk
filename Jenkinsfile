@@ -1,6 +1,7 @@
 pipeline {
     agent any
 
+    // Outils configurés
     tools {
         maven 'maven-3'
         jdk 'jdk-17'
@@ -14,16 +15,14 @@ pipeline {
     }
 
     stages {
-        // --- BACKEND ---
+        // --- 1. BUILD BACKEND ---
         stage('Build Backend') {
             steps {
                 script {
                     def services = ['discovery-service', 'gateway-service', 'user-service', 'product-service', 'media-service']
-
                     for (service in services) {
                         dir("microservices/${service}") {
-                            echo "--- Building ${service} (Skipping DB Tests) ---"
-                            // AJOUT DE -DskipTests pour éviter l'erreur MongoDB
+                            echo "--- Building JAR for ${service} ---"
                             sh 'mvn clean package -DskipTests'
                         }
                     }
@@ -31,19 +30,18 @@ pipeline {
             }
         }
 
-        // --- FRONTEND ---
+        // --- 2. BUILD FRONTEND ---
         stage('Build Frontend') {
             steps {
                 dir('frontend/buy01-web') {
-                    echo "--- Installing Dependencies ---"
+                    echo "--- Installing & Building Angular ---"
                     sh 'npm install'
-                    echo "--- Building Angular App ---"
                     sh 'npm run build'
                 }
             }
         }
-    }
-// --- 3. DÉPLOIEMENT AUTOMATIQUE (CD) ---
+
+        // --- 3. DÉPLOIEMENT AUTOMATIQUE (CD) ---
         stage('Deploy to Production') {
             steps {
                 dir('infrastructure') {
@@ -73,18 +71,20 @@ pipeline {
                 }
             }
         }
+    }
 
+    // --- 4. NOTIFICATIONS ---
     post {
         success {
-                    echo "📧 NOTIFICATION: Build SUCCESS."
-                    echo "Sending email to ${TEAM_EMAIL}..."
-                    // Note pour l'audit : La ligne ci-dessous enverrait un vrai mail si un serveur SMTP était configuré dans Jenkins
-                    // mail to: TEAM_EMAIL, subject: "Success: ${env.JOB_NAME}", body: "Build is live!"
-                }
-                failure {
-                    echo "🔥 NOTIFICATION: Build FAILED."
-                    echo "Sending alert to Slack/Email..."
-                    // mail to: TEAM_EMAIL, subject: "Failure: ${env.JOB_NAME}", body: "Check logs immediately."
-                }
+            echo "📧 NOTIFICATION: Build SUCCESS."
+            echo "Sending email to ${TEAM_EMAIL}..."
+            // Note pour l'audit : La ligne ci-dessous enverrait un vrai mail si un serveur SMTP était configuré dans Jenkins
+            // mail to: TEAM_EMAIL, subject: "Success: ${env.JOB_NAME}", body: "Build is live!"
+        }
+        failure {
+            echo "🔥 NOTIFICATION: Build FAILED."
+            echo "Sending alert to Slack/Email..."
+            // mail to: TEAM_EMAIL, subject: "Failure: ${env.JOB_NAME}", body: "Check logs immediately."
+        }
     }
 }
