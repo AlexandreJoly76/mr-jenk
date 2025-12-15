@@ -31,7 +31,19 @@ module.exports = function (config) {
       ]
     },
     reporters: ['progress', 'kjhtml'],
+    customLaunchers: {
+      ChromeHeadless: {
+        base: 'Chrome',
+        flags: [
+          '--headless',
+          '--disable-gpu',
+          '--no-sandbox',
+          '--remote-debugging-port=9222',
+        ]
+      }
+    },
     browsers: ['ChromeHeadless'],
+    singleRun: true,
     restartOnFileChange: true
   });
 };
