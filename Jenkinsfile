@@ -49,23 +49,35 @@ pipeline {
                         try {
                             echo "🚀 Starting Deployment..."
 
-                            // 1. Arrêt propre
-                            sh 'docker compose down'
+                            // 1. TÉLÉCHARGEMENT DE DOCKER-COMPOSE (Version Portable)
+                            // On télécharge la version officielle Linux
+                            sh 'curl -SL https://github.com/docker/compose/releases/download/v2.23.3/docker-compose-linux-x86_64 -o docker-compose'
 
-                            // 2. Redémarrage avec reconstruction des images (utilise les nouveaux JARs)
-                            // --build force la prise en compte du nouveau code
-                            sh 'docker compose up -d --build'
+                            // 2. RENDRE EXÉCUTABLE
+                            sh 'chmod +x docker-compose'
+
+                            echo "🔄 Restarting Containers..."
+
+                            // 3. EXÉCUTION (Note le ./ devant pour utiliser le fichier téléchargé)
+                            // On utilise le fichier local, pas celui du système
+                            sh './docker-compose down'
+                            sh './docker-compose up -d --build'
 
                             echo "✅ Deployment Successful!"
+
                         } catch (Exception e) {
-                            // --- STRATÉGIE DE ROLLBACK ---
                             echo "🚨 Deployment Failed! Initiating Rollback..."
 
-                            // On tente de redémarrer sans rebuilder (reprend les anciennes images si dispos)
-                            sh 'docker compose up -d'
+                            // Rollback avec le fichier local
+                            // Le try/catch s'assure qu'on tente de redémarrer même si le build plante
+                            if (fileExists('docker-compose')) {
+                                sh './docker-compose up -d'
+                            }
 
-                            // On fait échouer le pipeline pour la notif
-                            error "Deployment failed, rolled back to previous state."
+                            error "Deployment failed: ${e.message}"
+                        } finally {
+                            // Nettoyage : on supprime le fichier binaire pour ne pas polluer
+                            sh 'rm -f docker-compose'
                         }
                     }
                 }
