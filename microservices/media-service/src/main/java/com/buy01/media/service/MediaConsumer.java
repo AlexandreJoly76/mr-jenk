@@ -16,6 +16,6 @@ public class MediaConsumer {
     @KafkaListener(topics = "image-deletion", groupId = "media-group")
     public void consumeImageDeletion(String imageId) {
         log.info("Message Kafka reçu : Suppression de l'image {}", imageId);
-        mediaService.deleteImage(imageId)
+        mediaService.deleteImage(imageId);
     }
 }
