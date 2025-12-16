@@ -77,4 +77,20 @@ pipeline {
             }
         }
     }
+        // --- BLOC DE NOTIFICATION SÉCURISÉ ---
+            post {
+                success {
+                    echo "✅ BUILD SUCCESS"
+                    // On utilise env.DEVOPS_EMAIL défini dans Jenkins
+                    mail to: "${env.DEVOPS_EMAIL}",
+                         subject: "✅ SUCCESS: Buy01 Pipeline (Build #${env.BUILD_NUMBER})",
+                         body: "Le déploiement a réussi ! \nURL: ${env.BUILD_URL}"
+                }
+                failure {
+                    echo "❌ BUILD FAILED"
+                    mail to: "${env.DEVOPS_EMAIL}",
+                         subject: "🚨 FAILURE: Buy01 Pipeline (Build #${env.BUILD_NUMBER})",
+                         body: "Le pipeline a échoué. \nLogs: ${env.BUILD_URL}console"
+                }
+            }
 }
