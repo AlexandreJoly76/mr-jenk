@@ -7,7 +7,8 @@ pipeline {
         jdk 'jdk-17'
         nodejs 'node-22'
         // On ajoute l'outil scanner configuré plus tôt
-        'org.sonarsource.scanner.jenkins-runner.SonarQubeScanner' 'sonar-scanner'
+        // On utilise le nom interne exact donné dans ton message d'erreur
+        'hudson.plugins.sonar.SonarRunnerInstallation' 'sonar-scanner'
     }
 
     environment {
