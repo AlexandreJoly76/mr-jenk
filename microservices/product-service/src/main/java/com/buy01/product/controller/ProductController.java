@@ -71,8 +71,6 @@ public class ProductController {
                     productProducer.sendImageDeletionRequest(imageId);
                 }
             }
-            String useless="";
-            System.out.println("useless log to trigger sonarcube");
             // 3. On supprime le produit
             productRepository.deleteById(id);
         }
