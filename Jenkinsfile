@@ -6,67 +6,66 @@ pipeline {
         maven 'maven-3'
         jdk 'jdk-17'
         nodejs 'node-22'
-        // On ajoute l'outil scanner configuré plus tôt
-        // On utilise le nom interne exact donné dans ton message d'erreur
         'hudson.plugins.sonar.SonarRunnerInstallation' 'sonar-scanner'
     }
 
     environment {
         CHROME_BIN = '/usr/bin/chromium'
-        // Nom du serveur configuré dans Jenkins -> System
         SONAR_SERVER_NAME = 'sonar-server'
+        FINAL_EMAIL = "${env.DEVOPS_EMAIL ?: 'ton.email@gmail.com'}"
     }
 
     stages {
-// --- 1. ANALYSE SONARQUBE (Correction : Utilisation du Scanner CLI) ---
-        stage('Code Quality Analysis') {
-            steps {
-                script {
-                    echo "--- 🔍 Starting SonarQube Analysis ---"
-
-                    // 1. On récupère le chemin de l'outil 'sonar-scanner' configuré dans Jenkins
-                    def scannerHome = tool 'sonar-scanner'
-
-                    // 2. On lance l'analyse
-                    withSonarQubeEnv(SONAR_SERVER_NAME) {
-                        // On utilise l'exécutable direct du scanner
-                        // -Dsonar.sources=.  signifie "Scanne tout le dossier courant"
-                        sh """${scannerHome}/bin/sonar-scanner \
-                            -Dsonar.projectKey=buy-01 \
-                            -Dsonar.projectName=buy-01 \
-                            -Dsonar.sources=. \
-                            -Dsonar.host.url=http://sonarqube:9000 \
-                            -Dsonar.token=${SONAR_AUTH_TOKEN}"""
-                    }
-                }
-            }
-        }
-
-        // --- NOUVELLE ÉTAPE : QUALITY GATE ---
-        // C'est ici qu'on bloque le pipeline si le code est pourri
-        stage("Quality Gate") {
-            steps {
-                timeout(time: 2, unit: 'MINUTES') {
-                    // Attend que SonarQube renvoie le verdict via le Webhook
-                    waitForQualityGate abortPipeline: true
-                }
-            }
-        }
-
-        stage('Test & Build Backend') {
+        // --- 1. BUILD BACKEND D'ABORD (Obligatoire pour Sonar Java) ---
+        stage('Build Backend (Pre-Analysis)') {
             steps {
                 script {
                     def services = ['discovery-service', 'gateway-service', 'user-service', 'product-service', 'media-service']
                     for (service in services) {
                         dir("microservices/${service}") {
-                            // On relance package pour générer les JARs finaux (sans re-télécharger grâce au cache)
-                            sh 'mvn package -DskipTests'
+                            // On compile juste, sans lancer les tests (gain de temps pour l'analyse)
+                            sh 'mvn clean package -DskipTests'
                         }
                     }
                 }
             }
         }
 
+        // --- 2. ANALYSE SONARQUBE ---
+        stage('Code Quality Analysis') {
+            steps {
+                script {
+                    echo "--- 🔍 Starting SonarQube Analysis ---"
+                    def scannerHome = tool 'sonar-scanner'
+
+                    withSonarQubeEnv(SONAR_SERVER_NAME) {
+                        // LA CORRECTION EST ICI :
+                        // 1. On scanne tout le dossier (.)
+                        // 2. On dit à Sonar où sont les fichiers compilés (**/target/classes)
+                        sh """${scannerHome}/bin/sonar-scanner \
+                            -Dsonar.projectKey=buy-01 \
+                            -Dsonar.projectName=buy-01 \
+                            -Dsonar.sources=. \
+                            -Dsonar.host.url=http://sonarqube:9000 \
+                            -Dsonar.token=${SONAR_AUTH_TOKEN} \
+                            -Dsonar.java.binaries=**/target/classes"""
+                    }
+                }
+            }
+        }
+
+        // --- 3. QUALITY GATE ---
+        stage("Quality Gate") {
+            steps {
+                timeout(time: 2, unit: 'MINUTES') {
+                    waitForQualityGate abortPipeline: true
+                }
+            }
+        }
+
+        // --- 4. TESTS BACKEND & FRONTEND ---
+        // (On refait un tour complet ou on passe au frontend,
+        //  ici je laisse tes tests Frontend car le backend est déjà compilé)
         stage('Test & Build Frontend') {
             steps {
                 dir('frontend/buy01-web') {
@@ -75,7 +74,7 @@ pipeline {
                         try {
                            sh 'npm run test -- --no-watch --no-progress --browsers=ChromeHeadless'
                         } catch (Exception e) {
-                           echo "⚠️ Tests Frontend warning."
+                           echo "⚠️ Warning tests Frontend"
                         }
                     }
                     sh 'npm run build'
@@ -83,6 +82,7 @@ pipeline {
             }
         }
 
+        // --- 5. DEPLOY ---
         stage('Deploy to Production') {
             steps {
                 dir('infrastructure') {
@@ -106,12 +106,10 @@ pipeline {
 
     post {
         success {
-            echo "✅ BUILD SUCCESS"
-             mail to: "${env.DEVOPS_EMAIL}", subject: "✅ SUCCESS", body: "Build OK"
+             mail to: "${env.FINAL_EMAIL}", subject: "✅ SUCCESS Buy01", body: "Build OK: ${env.BUILD_URL}"
         }
         failure {
-            echo "❌ BUILD FAILED"
-             mail to: "${env.DEVOPS_EMAIL}", subject: "🚨 FAILED", body: "Check logs"
+             mail to: "${env.FINAL_EMAIL}", subject: "🚨 FAILED Buy01", body: "Check logs: ${env.BUILD_URL}"
         }
     }
 }
