@@ -24,7 +24,7 @@ pipeline {
                     for (service in services) {
                         dir("microservices/${service}") {
                             // On compile juste, sans lancer les tests (gain de temps pour l'analyse)
-                            sh 'mvn clean package -DskipTests'
+                            sh 'mvn clean package'
                         }
                     }
                 }
