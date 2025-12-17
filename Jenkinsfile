@@ -18,21 +18,25 @@ pipeline {
     }
 
     stages {
-        // --- NOUVELLE ÉTAPE : ANALYSE SONARQUBE ---
-        stage('Code Quality Analysis (SonarQube)') {
+// --- 1. ANALYSE SONARQUBE (Correction : Utilisation du Scanner CLI) ---
+        stage('Code Quality Analysis') {
             steps {
                 script {
-                    // On appelle le serveur Sonar configuré
-                    withSonarQubeEnv(SONAR_SERVER_NAME) {
+                    echo "--- 🔍 Starting SonarQube Analysis ---"
 
-                        // 1. Analyse BACKEND (Maven gère nativement Sonar)
-                        // On passe les params : url du projet, sources, binaires java
-                        echo "--- 🔍 Analyzing Backend ---"
-                        sh "mvn clean verify sonar:sonar \
+                    // 1. On récupère le chemin de l'outil 'sonar-scanner' configuré dans Jenkins
+                    def scannerHome = tool 'sonar-scanner'
+
+                    // 2. On lance l'analyse
+                    withSonarQubeEnv(SONAR_SERVER_NAME) {
+                        // On utilise l'exécutable direct du scanner
+                        // -Dsonar.sources=.  signifie "Scanne tout le dossier courant"
+                        sh """${scannerHome}/bin/sonar-scanner \
                             -Dsonar.projectKey=buy-01 \
-                            -Dsonar.projectName='buy-01' \
+                            -Dsonar.projectName=buy-01 \
+                            -Dsonar.sources=. \
                             -Dsonar.host.url=http://sonarqube:9000 \
-                            -Dsonar.token=${SONAR_AUTH_TOKEN}" // Variable injectée auto par withSonarQubeEnv
+                            -Dsonar.token=${SONAR_AUTH_TOKEN}"""
                     }
                 }
             }
