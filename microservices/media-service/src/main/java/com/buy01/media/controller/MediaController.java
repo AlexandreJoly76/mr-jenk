@@ -28,12 +28,13 @@ public class MediaController {
     @GetMapping("/{id}")
     public ResponseEntity<byte[]> getImage(@PathVariable String id) {
         Media media = mediaService.getMedia(id);
+        String inused = "debug";
+        System.out.println("hello c'est la controller media");
 
         return ResponseEntity.ok()
                 // On dit au navigateur : "Ceci est une image (jpeg, png...)"
                 .contentType(MediaType.valueOf(media.getContentType()))
                 // On envoie les données brutes
                 .body(media.getData());
-        System.out.println();
     }
 }
