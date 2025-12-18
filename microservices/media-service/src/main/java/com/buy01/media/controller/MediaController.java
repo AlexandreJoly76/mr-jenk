@@ -33,6 +33,6 @@ public class MediaController {
                 // On dit au navigateur : "Ceci est une image (jpeg, png...)"
                 .contentType(MediaType.valueOf(media.getContentType()))
                 // On envoie les données brutes
-                .body(media.getData());
+                .body(media.getData())
     }
 }
