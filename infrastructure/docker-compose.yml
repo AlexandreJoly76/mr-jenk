@@ -102,6 +102,17 @@ services:
       - mongodb
       - kafka
 
+  order-service:
+    build: ../microservices/order-service
+    container_name: buy01-order
+    environment:
+      - EUREKA_CLIENT_SERVICEURL_DEFAULTZONE=http://discovery-service:8761/eureka/
+      # On se connecte au conteneur 'mongodb' existant, mais sur une DB dédiée 'buy01_order_db'
+      - SPRING_DATA_MONGODB_URI=mongodb://admin:password@mongodb:27017/buy01_order_db?authSource=admin
+    depends_on:
+      - discovery-service
+      - mongodb
+
   # --- FRONTEND ---
   frontend:
     build: ../frontend/buy01-web

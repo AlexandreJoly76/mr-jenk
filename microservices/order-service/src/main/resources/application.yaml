@@ -1,0 +1,16 @@
+server:
+  port: 8085 # Port unique (8080=Gateway, 8081=MongoExpress, 8761=Eureka)
+
+spring:
+  application:
+    name: order-service
+  data:
+    mongodb:
+      # Format: mongodb://user:pass@host:port/databaseName?options
+      uri: mongodb://admin:password@mongodb:27017/buy01_order_db?authSource=admin
+      auto-index-creation: true
+
+eureka:
+  client:
+    service-url:
+      defaultZone: http://localhost:8761/eureka/

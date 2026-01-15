@@ -20,7 +20,7 @@ pipeline {
         stage('Build Backend (Pre-Analysis)') {
             steps {
                 script {
-                    def services = ['discovery-service', 'gateway-service', 'user-service', 'product-service', 'media-service']
+                    def services = ['discovery-service', 'gateway-service', 'user-service', 'product-service', 'media-service','order-service']
                     for (service in services) {
                         dir("microservices/${service}") {
                             // On compile juste, sans lancer les tests (gain de temps pour l'analyse)
