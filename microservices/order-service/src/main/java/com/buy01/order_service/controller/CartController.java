@@ -1,8 +1,8 @@
-package com.buy01.orderservice.controller;
+package com.buy01.order_service.controller;
 
-import com.buy01.orderservice.model.Cart;
-import com.buy01.orderservice.model.CartItem;
-import com.buy01.orderservice.service.CartService;
+import com.buy01.order_service.model.Cart;
+import com.buy01.order_service.model.CartItem;
+import com.buy01.order_service.service.CartService;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
