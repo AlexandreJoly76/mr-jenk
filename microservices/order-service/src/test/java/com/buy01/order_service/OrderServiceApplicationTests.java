@@ -8,7 +8,8 @@ class OrderServiceApplicationTests {
 
 	@Test
 	void contextLoads() {
-		//hello man
+		//TODO: ajouter des tests unitaires
+
 	}
 
 }
