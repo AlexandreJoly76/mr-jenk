@@ -20,11 +20,11 @@ pipeline {
         stage('Build Backend (Pre-Analysis)') {
             steps {
                 script {
-                    def services = ['discovery-service', 'gateway-service', 'user-service', 'product-service', 'media-service']
+                    def services = ['discovery-service', 'gateway-service', 'user-service', 'product-service', 'media-service','order-service']
                     for (service in services) {
                         dir("microservices/${service}") {
                             // On compile juste, sans lancer les tests (gain de temps pour l'analyse)
-                            sh 'mvn clean package'
+                            sh 'mvn clean verify'
                         }
                     }
                 }
@@ -48,7 +48,8 @@ pipeline {
                             -Dsonar.sources=. \
                             -Dsonar.host.url=http://sonarqube:9000 \
                             -Dsonar.token=${SONAR_AUTH_TOKEN} \
-                            -Dsonar.java.binaries=**/target/classes"""
+                            -Dsonar.java.binaries=**/target/classes \
+                            -Dsonar.coverage.jacoco.xmlReportPaths=**/target/site/jacoco/jacoco.xml"""
                     }
                 }
             }
