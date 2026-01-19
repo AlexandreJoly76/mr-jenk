@@ -1,4 +1,9 @@
 package com.buy01.order_service.repository;
 
-public class CartRepository {
+import com.buy01.order_service.model.Cart;
+import org.springframework.data.mongodb.repository.MongoRepository;
+import java.util.Optional;
+
+public interface CartRepository extends MongoRepository<Cart, String> {
+    Optional<Cart> findByUserId(String userId);
 }
