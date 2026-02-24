@@ -5,5 +5,6 @@
     <mapping directory="$PROJECT_DIR$/jenkins_home/caches/git-c3d631d8e843fafb57f75e8b828512c2" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/jenkins_home/workspace/buy-01-pipeline" vcs="Git" />
     <mapping directory="$PROJECT_DIR$/jenkins_home/workspace/buy-01-pipeline2" vcs="Git" />
+    <mapping directory="$PROJECT_DIR$/jenkins_home/workspace/buy-01-pipeline2@script/428a796249dffa52f7286ad67062e164da85a2478dbc26d9d5d80d44b3981889" vcs="Git" />
   </component>
 </project>

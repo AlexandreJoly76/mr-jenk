@@ -70,3 +70,14 @@ La passerelle API expose les routes suivantes :
 - `/user-service/**`: Route vers le service de gestion des utilisateurs.
 - `/product-service/**`: Route vers le service de gestion des produits.
 - `/media-service/**`: Route vers le service de gestion des médias.
+
+
+## Pour lancer en local et developper,
+
+faire les étapes suivantes:
+ - docker compose up -d
+retirer le conteneur du frontend angular et le lancer en local pour le developpement:
+ - docker stop buy01-web
+Lancer le frontend en local:
+ - ng serve --ssl 
+cela permet de lancer le front en HTTPS et d'éviter les problèmes de CORS avec la gateway qui est aussi en HTTPS.
