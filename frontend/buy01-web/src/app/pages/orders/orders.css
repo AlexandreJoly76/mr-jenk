@@ -88,4 +88,5 @@
 .btn-cancel { background: #ffc107; }
 .btn-redo { background: #007bff; color: white; }
 .btn-delete { background: #dc3545; color: white; }
+.btn-validate { background: #28a745; color: white; }
 .btn-toggle { background: #6c757d; color: white; border: none; padding: 0.5rem 1rem; border-radius: 4px; cursor: pointer; }

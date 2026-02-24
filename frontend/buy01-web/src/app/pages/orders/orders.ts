@@ -62,4 +62,11 @@ export class OrdersComponent implements OnInit {
       this.orderService.deleteOrder(id).subscribe(() => this.loadOrders());
     }
   }
+
+  updateStatus(id: string, status: string): void {
+    this.orderService.updateOrderStatus(id, status).subscribe({
+      next: () => this.loadOrders(),
+      error: (err) => alert('Erreur lors du changement de statut')
+    });
+  }
 }

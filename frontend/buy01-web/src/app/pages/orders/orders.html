@@ -43,9 +43,18 @@
       <div class="order-footer">
         <div class="total">Total: {{ order.totalAmount | currency:'EUR' }}</div>
         <div class="actions">
+          <!-- Actions Acheteur -->
           <button *ngIf="!isSellerView && order.status === 'PENDING'" (click)="cancelOrder(order.id)" class="btn-cancel">Annuler</button>
           <button *ngIf="!isSellerView" (click)="redoOrder(order.id)" class="btn-redo">Recommander</button>
           <button *ngIf="!isSellerView && (order.status === 'DELIVERED' || order.status === 'CANCELLED')" (click)="deleteOrder(order.id)" class="btn-delete">Supprimer</button>
+
+          <!-- Actions Vendeur -->
+          <ng-container *ngIf="isSellerView">
+            <button *ngIf="order.status === 'PENDING'" (click)="updateStatus(order.id, 'PAID')" class="btn-validate">Valider Paiement</button>
+            <button *ngIf="order.status === 'PAID'" (click)="updateStatus(order.id, 'SHIPPED')" class="btn-validate">Expédier</button>
+            <button *ngIf="order.status === 'SHIPPED'" (click)="updateStatus(order.id, 'DELIVERED')" class="btn-validate">Marquer Livré</button>
+            <button *ngIf="order.status !== 'DELIVERED' && order.status !== 'CANCELLED'" (click)="updateStatus(order.id, 'CANCELLED')" class="btn-delete">Refuser/Annuler</button>
+          </ng-container>
         </div>
       </div>
     </div>

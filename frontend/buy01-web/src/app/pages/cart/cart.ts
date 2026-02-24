@@ -1,6 +1,7 @@
 import { Component, OnInit, signal, computed } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { CartService, Cart, CartItem } from '../../services/cart.service';
+import { OrderService } from '../../services/order.service';
 import { Router, RouterModule } from '@angular/router';
 
 @Component({
@@ -20,7 +21,11 @@ export class CartComponent implements OnInit {
     return currentCart.items.reduce((sum, item) => sum + (item.price * item.quantity), 0);
   });
 
-  constructor(private cartService: CartService, private router: Router) {}
+  constructor(
+    private cartService: CartService, 
+    private orderService: OrderService,
+    private router: Router
+  ) {}
 
   ngOnInit(): void {
     this.loadCart();
@@ -62,6 +67,18 @@ export class CartComponent implements OnInit {
   }
 
   checkout(): void {
-    alert('Redirection vers le paiement (à implémenter)...');
+    const address = prompt('Entrez votre adresse de livraison :');
+    if (!address) return;
+
+    this.orderService.checkout(address, 'PAY_ON_DELIVERY').subscribe({
+      next: () => {
+        alert('Commande validée !');
+        this.router.navigate(['/orders']);
+      },
+      error: (err) => {
+        console.error(err);
+        this.errorMessage.set('Erreur lors de la validation de la commande.');
+      }
+    });
   }
 }

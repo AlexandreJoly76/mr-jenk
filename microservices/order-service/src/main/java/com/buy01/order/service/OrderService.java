@@ -165,6 +165,23 @@ public class OrderService {
         orderRepository.deleteById(orderId);
     }
 
+    public Order updateOrderStatus(String sellerId, String orderId, OrderStatus newStatus) {
+        Order order = orderRepository.findById(orderId)
+                .orElseThrow(() -> new RuntimeException("Commande non trouvée"));
+
+        // Vérifier si le vendeur a au moins un produit dans cette commande
+        boolean isSellerOfOrder = order.getItems().stream()
+                .anyMatch(item -> item.getSellerId().equals(sellerId));
+
+        if (!isSellerOfOrder) {
+            throw new RuntimeException("Accès refusé : Vous n'êtes pas le vendeur de cette commande");
+        }
+
+        order.setStatus(newStatus);
+        order.setUpdatedAt(LocalDateTime.now());
+        return orderRepository.save(order);
+    }
+
     @Transactional
     public Order redoOrder(String userId, String orderId, String token) {
         Order oldOrder = orderRepository.findById(orderId)

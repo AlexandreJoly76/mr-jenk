@@ -69,6 +69,13 @@ export class OrderService {
     return this.http.post<Order>(`${this.apiUrl}/${orderId}/redo`, {}, { headers: this.getHeaders() });
   }
 
+  updateOrderStatus(orderId: string, status: string): Observable<Order> {
+    return this.http.put<Order>(`${this.apiUrl}/${orderId}/status`, {}, { 
+      headers: this.getHeaders(),
+      params: { status } 
+    });
+  }
+
   deleteOrder(orderId: string): Observable<void> {
     return this.http.delete<void>(`${this.apiUrl}/${orderId}`, { headers: this.getHeaders() });
   }

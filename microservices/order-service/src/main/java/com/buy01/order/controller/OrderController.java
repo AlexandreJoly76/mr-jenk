@@ -91,6 +91,19 @@ public class OrderController {
         return orderService.cancelOrder(userId, id);
     }
 
+    @PutMapping("/{id}/status")
+    public Order updateOrderStatus(
+            @RequestHeader("Authorization") String token, 
+            @PathVariable String id, 
+            @RequestParam OrderStatus status) {
+        String role = getClaim(token, "role");
+        if (!"SELLER".equals(role)) {
+            throw new RuntimeException("Accès réservé aux vendeurs");
+        }
+        String sellerId = getClaim(token, "id");
+        return orderService.updateOrderStatus(sellerId, id, status);
+    }
+
     @DeleteMapping("/{id}")
     public void deleteOrder(@RequestHeader("Authorization") String token, @PathVariable String id) {
         String userId = getClaim(token, "id");
