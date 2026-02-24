@@ -50,6 +50,20 @@ spring:
                 - Path=/media-service/**
               filters:
                 - StripPrefix=1
+          # --- NOUVELLE ROUTE ---
+            - id: cart-service-route
+              uri: lb://CART-SERVICE
+              predicates:
+                - Path=/cart-service/**
+              filters:
+                - StripPrefix=1
+          # --- NOUVELLE ROUTE ---
+            - id: order-service-route
+              uri: lb://ORDER-SERVICE
+              predicates:
+                - Path=/order-service/**
+              filters:
+                - StripPrefix=1
 
 eureka:
   client:

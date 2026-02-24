@@ -1,0 +1,29 @@
+<div class="profile-container">
+  <h2>Profil de {{ userService.currentUser()?.sub }}</h2>
+
+  <div class="stats-grid">
+    <div class="stat-card buyer-card">
+      <h3>Statistiques Acheteur</h3>
+      <div class="stat-items" *ngIf="userStats">
+        <p><strong>Total dépensé:</strong> {{ userStats.totalSpent | currency:'EUR' }}</p>
+        <p><strong>Commandes totales:</strong> {{ userStats.totalOrders }}</p>
+        <h4>Mes produits préférés:</h4>
+        <ul>
+          <li *ngFor="let p of userStats.topProducts">{{ p.productName }} ({{ p.count }})</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="stat-card seller-card" *ngIf="isSeller">
+      <h3>Statistiques Vendeur</h3>
+      <div class="stat-items" *ngIf="sellerStats">
+        <p><strong>Revenu total:</strong> {{ sellerStats.totalRevenue | currency:'EUR' }}</p>
+        <p><strong>Commandes livrées:</strong> {{ sellerStats.completedOrders }}</p>
+        <h4>Mes best-sellers:</h4>
+        <ul>
+          <li *ngFor="let p of sellerStats.bestSellers">{{ p.productName }} ({{ p.count }})</li>
+        </ul>
+      </div>
+    </div>
+  </div>
+</div>

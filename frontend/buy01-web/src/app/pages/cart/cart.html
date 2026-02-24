@@ -1,0 +1,42 @@
+<div class="cart-container">
+  <h2>Votre Panier</h2>
+
+  <div *ngIf="errorMessage" class="error-banner">
+    {{ errorMessage }}
+  </div>
+
+  <div *ngIf="cart && cart.items.length > 0; else emptyCart">
+    <div class="cart-items">
+      <div *ngFor="let item of cart.items" class="cart-item">
+        <div class="item-info">
+          <h3>{{ item.productName }}</h3>
+          <p class="price">{{ item.price | currency:'EUR' }}</p>
+        </div>
+        
+        <div class="item-actions">
+          <div class="quantity-control">
+            <button (click)="updateQuantity(item.productId, item.quantity - 1)" [disabled]="item.quantity <= 1">-</button>
+            <span>{{ item.quantity }}</span>
+            <button (click)="updateQuantity(item.productId, item.quantity + 1)">+</button>
+          </div>
+          <button class="btn-remove" (click)="removeItem(item.productId)">Supprimer</button>
+        </div>
+      </div>
+    </div>
+
+    <div class="cart-summary">
+      <div class="total">
+        <span>Total:</span>
+        <span class="total-price">{{ totalPrice | currency:'EUR' }}</span>
+      </div>
+      <button class="btn-checkout" (click)="checkout()">Passer à la caisse</button>
+    </div>
+  </div>
+
+  <ng-template #emptyCart>
+    <div class="empty-message">
+      <p>Votre panier est vide.</p>
+      <a routerLink="/" class="btn-continue">Continuer mes achats</a>
+    </div>
+  </ng-template>
+</div>
