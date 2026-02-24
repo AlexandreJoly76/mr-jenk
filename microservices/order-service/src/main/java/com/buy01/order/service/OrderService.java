@@ -1,15 +1,12 @@
 package com.buy01.order.service;
 
-import com.buy01.order.dto.CartDTO;
-import com.buy01.order.dto.CheckoutRequest;
+import com.buy01.order.dto.*;
 import com.buy01.order.model.Order;
 import com.buy01.order.model.OrderItem;
 import com.buy01.order.model.OrderStatus;
-import com.buy01.order.dto.*;
-import com.buy01.order.model.Order;
-import com.buy01.order.model.OrderStatus;
 import com.buy01.order.repository.OrderRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.Pageable;
@@ -31,14 +28,15 @@ import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class OrderService {
 
     private final OrderRepository orderRepository;
     private final WebClient.Builder webClientBuilder;
     private final MongoTemplate mongoTemplate;
+    private final OrderProducer orderProducer;
 
     public UserStatsDTO getUserStats(String userId) {
-        // 1. Total spent & total orders
         Aggregation agg = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("userId").is(userId)),
                 Aggregation.group("userId")
@@ -48,7 +46,6 @@ public class OrderService {
         AggregationResults<Map> results = mongoTemplate.aggregate(agg, "orders", Map.class);
         Map baseStats = results.getUniqueMappedResult();
 
-        // 2. Top Products
         Aggregation topProdAgg = Aggregation.newAggregation(
                 Aggregation.match(Criteria.where("userId").is(userId)),
                 Aggregation.unwind("items"),
@@ -73,11 +70,10 @@ public class OrderService {
     }
 
     public SellerStatsDTO getSellerStats(String sellerId) {
-        // 1. Revenue & Completed Orders
         Aggregation agg = Aggregation.newAggregation(
                 Aggregation.unwind("items"),
                 Aggregation.match(Criteria.where("items.sellerId").is(sellerId)),
-                Aggregation.group("_id") // Regrouper par commande d'abord pour compter les commandes uniques
+                Aggregation.group("_id")
                         .first("status").as("status")
                         .sum("items.priceAtPurchase").as("orderRevenue"),
                 Aggregation.match(Criteria.where("status").is(OrderStatus.DELIVERED)),
@@ -88,7 +84,6 @@ public class OrderService {
         AggregationResults<Map> results = mongoTemplate.aggregate(agg, "orders", Map.class);
         Map baseStats = results.getUniqueMappedResult();
 
-        // 2. Best Sellers
         Aggregation bestSellersAgg = Aggregation.newAggregation(
                 Aggregation.unwind("items"),
                 Aggregation.match(Criteria.where("items.sellerId").is(sellerId)),
@@ -169,12 +164,17 @@ public class OrderService {
         Order order = orderRepository.findById(orderId)
                 .orElseThrow(() -> new RuntimeException("Commande non trouvée"));
 
-        // Vérifier si le vendeur a au moins un produit dans cette commande
         boolean isSellerOfOrder = order.getItems().stream()
                 .anyMatch(item -> item.getSellerId().equals(sellerId));
 
         if (!isSellerOfOrder) {
-            throw new RuntimeException("Accès refusé : Vous n'êtes pas le vendeur de cette commande");
+            throw new RuntimeException("Accès refusé");
+        }
+
+        if (order.getStatus() == OrderStatus.PENDING && newStatus == OrderStatus.PAID) {
+            order.getItems().forEach(item -> 
+                orderProducer.sendStockUpdate(item.getProductId(), item.getQuantity())
+            );
         }
 
         order.setStatus(newStatus);
@@ -207,19 +207,16 @@ public class OrderService {
 
     @Transactional
     public Order checkout(String userId, CheckoutRequest request, String token) {
-        // 1. Récupérer le panier
         CartDTO cart = fetchCart(token);
         
         if (cart.getItems() == null || cart.getItems().isEmpty()) {
             throw new RuntimeException("Le panier est vide");
         }
 
-        // 2. Calculer le montant total
         BigDecimal totalAmount = cart.getItems().stream()
                 .map(item -> item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))
                 .reduce(BigDecimal.ZERO, BigDecimal::add);
 
-        // 3. Créer l'objet Order
         List<OrderItem> orderItems = cart.getItems().stream()
                 .map(item -> OrderItem.builder()
                         .productId(item.getProductId())
@@ -241,12 +238,8 @@ public class OrderService {
                 .updatedAt(LocalDateTime.now())
                 .build();
 
-        // 4. Sauvegarder la commande
         Order savedOrder = orderRepository.save(order);
-
-        // 5. Vider le panier
         clearCart(token);
-
         return savedOrder;
     }
 

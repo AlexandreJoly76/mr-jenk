@@ -17,6 +17,7 @@ export class Home implements OnInit{
 
   private productService = inject(ProductService);
   private cartService = inject(CartService);
+  protected readonly Number = Number;
 
   // RÈGLE : Gestion d'état via Signal
   // On initialise avec un tableau vide
@@ -37,6 +38,15 @@ export class Home implements OnInit{
   }
 
   addToCart(productId: string): void {
+    const product = this.products().find(p => p.id === productId);
+    console.log('Tentative d\'ajout au panier:', product);
+    
+    if (product && Number(product.quantity) <= 0) {
+      console.warn('Bloqué: Stock à 0', product.quantity);
+      alert('Désolé, ce produit est épuisé.');
+      return;
+    }
+
     this.cartService.addToCart(productId, 1).subscribe({
       next: () => {
         alert('Produit ajouté au panier !');

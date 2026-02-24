@@ -7,9 +7,11 @@
 /home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/main/java/com/buy01/order/dto/CheckoutRequest.java
 /home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/main/java/com/buy01/order/dto/ProductSummaryDTO.java
 /home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/main/java/com/buy01/order/dto/SellerStatsDTO.java
+/home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/main/java/com/buy01/order/dto/StockUpdateEvent.java
 /home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/main/java/com/buy01/order/dto/UserStatsDTO.java
 /home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/main/java/com/buy01/order/model/Order.java
 /home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/main/java/com/buy01/order/model/OrderItem.java
 /home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/main/java/com/buy01/order/model/OrderStatus.java
 /home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/main/java/com/buy01/order/repository/OrderRepository.java
+/home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/main/java/com/buy01/order/service/OrderProducer.java
 /home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/main/java/com/buy01/order/service/OrderService.java

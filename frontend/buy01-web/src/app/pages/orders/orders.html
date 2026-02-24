@@ -1,14 +1,14 @@
 <div class="orders-container">
   <div class="header">
-    <h2>{{ isSellerView ? 'Ventes Reçues' : 'Mes Commandes' }}</h2>
+    <h2>{{ isSellerView() ? 'Ventes Reçues' : 'Mes Commandes' }}</h2>
     <button *ngIf="userService.currentUser()?.role === 'SELLER'" (click)="toggleView()" class="btn-toggle">
-      Passer en mode {{ isSellerView ? 'Acheteur' : 'Vendeur' }}
+      Passer en mode {{ isSellerView() ? 'Acheteur' : 'Vendeur' }}
     </button>
   </div>
 
   <div class="filters">
-    <input type="text" [(ngModel)]="keywordFilter" placeholder="Rechercher un produit..." (keyup.enter)="loadOrders()">
-    <select [(ngModel)]="statusFilter" (change)="loadOrders()">
+    <input type="text" [ngModel]="keywordFilter()" (ngModelChange)="keywordFilter.set($event)" placeholder="Rechercher un produit..." (keyup.enter)="loadOrders()">
+    <select [ngModel]="statusFilter()" (ngModelChange)="statusFilter.set($event); loadOrders()">
       <option value="">Tous les statuts</option>
       <option value="PENDING">En attente</option>
       <option value="PAID">Payé</option>
@@ -19,14 +19,14 @@
     <button (click)="loadOrders()" class="btn-search">Filtrer</button>
   </div>
 
-  <div *ngIf="loading" class="loader">Chargement...</div>
+  <div *ngIf="loading()" class="loader">Chargement...</div>
 
-  <div *ngIf="!loading && orders.length === 0" class="empty-state">
+  <div *ngIf="!loading() && orders().length === 0" class="empty-state">
     Aucune commande trouvée.
   </div>
 
-  <div class="order-list" *ngIf="!loading">
-    <div *ngFor="let order of orders" class="order-card">
+  <div class="order-list" *ngIf="!loading()">
+    <div *ngFor="let order of orders()" class="order-card">
       <div class="order-header">
         <span class="order-id">#{{ order.id.substring(order.id.length - 8) }}</span>
         <span class="order-date">{{ order.createdAt | date:'short' }}</span>
@@ -44,12 +44,12 @@
         <div class="total">Total: {{ order.totalAmount | currency:'EUR' }}</div>
         <div class="actions">
           <!-- Actions Acheteur -->
-          <button *ngIf="!isSellerView && order.status === 'PENDING'" (click)="cancelOrder(order.id)" class="btn-cancel">Annuler</button>
-          <button *ngIf="!isSellerView" (click)="redoOrder(order.id)" class="btn-redo">Recommander</button>
-          <button *ngIf="!isSellerView && (order.status === 'DELIVERED' || order.status === 'CANCELLED')" (click)="deleteOrder(order.id)" class="btn-delete">Supprimer</button>
+          <button *ngIf="!isSellerView() && order.status === 'PENDING'" (click)="cancelOrder(order.id)" class="btn-cancel">Annuler</button>
+          <button *ngIf="!isSellerView()" (click)="redoOrder(order.id)" class="btn-redo">Recommander</button>
+          <button *ngIf="!isSellerView() && (order.status === 'DELIVERED' || order.status === 'CANCELLED')" (click)="deleteOrder(order.id)" class="btn-delete">Supprimer</button>
 
           <!-- Actions Vendeur -->
-          <ng-container *ngIf="isSellerView">
+          <ng-container *ngIf="isSellerView()">
             <button *ngIf="order.status === 'PENDING'" (click)="updateStatus(order.id, 'PAID')" class="btn-validate">Valider Paiement</button>
             <button *ngIf="order.status === 'PAID'" (click)="updateStatus(order.id, 'SHIPPED')" class="btn-validate">Expédier</button>
             <button *ngIf="order.status === 'SHIPPED'" (click)="updateStatus(order.id, 'DELIVERED')" class="btn-validate">Marquer Livré</button>

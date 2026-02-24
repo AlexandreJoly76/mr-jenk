@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, signal } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { OrderService, Order, Page } from '../../services/order.service';
@@ -12,11 +12,11 @@ import { UserService } from '../../services/user.service';
   styleUrls: ['./orders.css']
 })
 export class OrdersComponent implements OnInit {
-  orders: Order[] = [];
-  isSellerView: boolean = false;
-  statusFilter: string = '';
-  keywordFilter: string = '';
-  loading: boolean = false;
+  orders = signal<Order[]>([]);
+  isSellerView = signal<boolean>(false);
+  statusFilter = signal<string>('');
+  keywordFilter = signal<string>('');
+  loading = signal<boolean>(false);
 
   constructor(private orderService: OrderService, public userService: UserService) {}
 
@@ -25,27 +25,27 @@ export class OrdersComponent implements OnInit {
   }
 
   loadOrders(): void {
-    this.loading = true;
+    this.loading.set(true);
     const params = {
-      status: this.statusFilter,
-      keyword: this.keywordFilter
+      status: this.statusFilter(),
+      keyword: this.keywordFilter()
     };
 
-    const request = this.isSellerView 
+    const request = this.isSellerView() 
       ? this.orderService.getSellerOrders(params) 
       : this.orderService.getOrders(params);
 
     request.subscribe({
       next: (page) => {
-        this.orders = page.content;
-        this.loading = false;
+        this.orders.set(page.content);
+        this.loading.set(false);
       },
-      error: () => this.loading = false
+      error: () => this.loading.set(false)
     });
   }
 
   toggleView(): void {
-    this.isSellerView = !this.isSellerView;
+    this.isSellerView.set(!this.isSellerView());
     this.loadOrders();
   }
 
