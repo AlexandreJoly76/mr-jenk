@@ -6,6 +6,7 @@ import com.buy01.cart.model.Cart;
 import com.buy01.cart.model.CartItem;
 import com.buy01.cart.repository.CartRepository;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.web.reactive.function.client.WebClient;
 
@@ -14,6 +15,7 @@ import java.util.Optional;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class CartService {
 
     private final CartRepository cartRepository;
@@ -25,10 +27,18 @@ public class CartService {
     }
 
     public Cart addToCart(String userId, CartRequest request) {
+        log.info("Tentative d'ajout au panier pour l'utilisateur {} : {}", userId, request);
         // 1. Valider le produit via Product Service
         ProductDTO product = fetchProductDetails(request.getProductId());
         
+        if (product == null) {
+            log.error("Produit non trouvé : {}", request.getProductId());
+            throw new RuntimeException("Produit non trouvé");
+        }
+
         if (product.getQuantity() < request.getQuantity()) {
+            log.warn("Stock insuffisant pour le produit {} : {} requis, {} disponibles", 
+                    product.getId(), request.getQuantity(), product.getQuantity());
             throw new RuntimeException("Stock insuffisant");
         }
 
@@ -85,11 +95,17 @@ public class CartService {
     }
 
     private ProductDTO fetchProductDetails(String productId) {
-        return webClientBuilder.build()
-                .get()
-                .uri("http://product-service/api/products/" + productId)
-                .retrieve()
-                .bodyToMono(ProductDTO.class)
-                .block(); // Utilisation synchrone pour simplifier cette étape
+        log.info("Récupération des détails du produit {} depuis product-service", productId);
+        try {
+            return webClientBuilder.build()
+                    .get()
+                    .uri("http://product-service/api/products/" + productId)
+                    .retrieve()
+                    .bodyToMono(ProductDTO.class)
+                    .block();
+        } catch (Exception e) {
+            log.error("Erreur lors de l'appel au product-service : {}", e.getMessage());
+            throw new RuntimeException("Impossible de vérifier le produit : " + e.getMessage());
+        }
     }
 }

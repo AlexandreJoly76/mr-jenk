@@ -31,6 +31,17 @@ public class ProductController {
     private final MongoTemplate mongoTemplate;
     private final ObjectMapper objectMapper = new ObjectMapper();
 
+    @GetMapping
+    public List<Product> getAllProducts() {
+        return productRepository.findAll();
+    }
+
+    @GetMapping("/{id}")
+    public Product getProductById(@PathVariable String id) {
+        return productRepository.findById(id)
+                .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
+    }
+
     @GetMapping("/search")
     public Page<Product> searchProducts(
             @RequestParam(required = false) String keyword,
@@ -72,7 +83,6 @@ public class ProductController {
             query.addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])));
         }
 
-        // Sorting
         Sort sort = Sort.by(Sort.Direction.fromString(sortDir), sortBy);
         query.with(sort);
 
@@ -82,21 +92,18 @@ public class ProductController {
         return new PageImpl<>(products, PageRequest.of(page, size), count);
     }
 
-    // Méthode utilitaire pour vérifier le rôle SELLER
     private void verifySellerRole(String token) {
         try {
-            // Le token arrive sous forme "Bearer eyJ..."
-            String payload = token.split("\\.")[1]; // On prend la partie du milieu
+            String jwt = token.startsWith("Bearer ") ? token.substring(7) : token;
+            String payload = jwt.split("\\.")[1];
             String decodedPayload = new String(Base64.getDecoder().decode(payload));
             JsonNode json = objectMapper.readTree(decodedPayload);
-
             String role = json.get("role").asText();
-
             if (!"SELLER".equals(role)) {
-                throw new RuntimeException("Accès refusé : Seuls les vendeurs peuvent faire ça.");
+                throw new RuntimeException("Accès refusé");
             }
         } catch (Exception e) {
-            throw new RuntimeException("Token invalide ou erreur de lecture rôle"); // Simplifié pour l'audit
+            throw new RuntimeException("Token invalide");
         }
     }
 
@@ -106,38 +113,21 @@ public class ProductController {
         return productRepository.save(product);
     }
 
-    @GetMapping
-    public List<Product> getAllProducts() {
-        return productRepository.findAll();
-    }
-
-    @GetMapping("/{id}")
-    public Product getProductById(@PathVariable String id) {
-        return productRepository.findById(id)
-                .orElseThrow(() -> new RuntimeException("Produit non trouvé"));
-    }
-
-    // --- AJOUT 1 : Récupérer les produits d'un vendeur spécifique ---
     @GetMapping("/seller/{userId}")
     public List<Product> getProductsBySeller(@PathVariable String userId) {
         return productRepository.findByUserId(userId);
     }
 
-    // --- AJOUT 2 : Supprimer un produit ---
     @DeleteMapping("/{id}")
     public void deleteProduct(@PathVariable String id, @RequestHeader("Authorization") String token) {
         verifySellerRole(token);
-        // 1. On cherche le produit AVANT de le supprimer pour avoir l'ID de l'image
         Product product = productRepository.findById(id).orElse(null);
-
         if (product != null) {
-            // 2. Si le produit a une image, on prévient Kafka
             if (product.getImageIds() != null) {
                 for (String imageId : product.getImageIds()) {
                     productProducer.sendImageDeletionRequest(imageId);
                 }
             }
-            // 3. On supprime le produit
             productRepository.deleteById(id);
         }
     }

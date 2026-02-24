@@ -1,13 +1,13 @@
 <div class="cart-container">
   <h2>Votre Panier</h2>
 
-  <div *ngIf="errorMessage" class="error-banner">
-    {{ errorMessage }}
+  <div *ngIf="errorMessage()" class="error-banner">
+    {{ errorMessage() }}
   </div>
 
-  <div *ngIf="cart && cart.items.length > 0; else emptyCart">
+  <div *ngIf="cart() && cart()!.items.length > 0; else emptyCart">
     <div class="cart-items">
-      <div *ngFor="let item of cart.items" class="cart-item">
+      <div *ngFor="let item of cart()!.items" class="cart-item">
         <div class="item-info">
           <h3>{{ item.productName }}</h3>
           <p class="price">{{ item.price | currency:'EUR' }}</p>
@@ -27,7 +27,7 @@
     <div class="cart-summary">
       <div class="total">
         <span>Total:</span>
-        <span class="total-price">{{ totalPrice | currency:'EUR' }}</span>
+        <span class="total-price">{{ totalPrice() | currency:'EUR' }}</span>
       </div>
       <button class="btn-checkout" (click)="checkout()">Passer à la caisse</button>
     </div>

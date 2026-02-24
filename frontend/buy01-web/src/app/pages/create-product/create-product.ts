@@ -27,6 +27,7 @@ export class CreateProduct {
   productForm = this.fb.nonNullable.group({
     name: ['', Validators.required],
     description: ['', Validators.required],
+    category: ['', Validators.required],
     price: [0, [Validators.required, Validators.min(0.1)]],
     quantity: [1, [Validators.required, Validators.min(1)]], // Ajout
   });

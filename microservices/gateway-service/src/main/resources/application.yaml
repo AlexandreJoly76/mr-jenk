@@ -18,8 +18,8 @@ spring:
             cors-configurations:
               '[/**]': # Pour toutes les routes
                 allowedOrigins:
-                  "https://localhost:4200" # Autorise Angular
-                  "http://localhost:4200"
+                  - "https://localhost:4200" # Autorise Angular
+                  - "http://localhost:4200"
                 allowedMethods: # Autorise tout
                   - GET
                   - POST
@@ -28,7 +28,7 @@ spring:
                 allowedHeaders: "*"
           discovery:
             locator:
-              enabled: false
+              enabled: true
           routes:
             - id: user-service-route
               uri: lb://USER-SERVICE  # On utilise le Load Balancer (Eureka)
