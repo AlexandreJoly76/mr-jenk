@@ -1,5 +1,6 @@
 package com.buy01.order.dto;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import lombok.Data;
 import java.math.BigDecimal;
 
@@ -9,5 +10,7 @@ public class CartItemDTO {
     private String productName;
     private BigDecimal price;
     private Integer quantity;
+    
+    @JsonProperty("sellerId")
     private String sellerId;
 }

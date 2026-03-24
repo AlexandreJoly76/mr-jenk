@@ -1,32 +1,156 @@
 .profile-container {
-  max-width: 1000px;
-  margin: 0 auto;
+  max-width: 1200px;
+  margin: 2rem auto;
+  padding: 0 1rem;
+  font-family: 'Inter', system-ui, -apple-system, sans-serif;
 }
 
+.profile-header {
+  margin-bottom: 3rem;
+  text-align: center;
+}
+
+.profile-header h2 {
+  font-size: 2.5rem;
+  color: #1a202c;
+  margin-bottom: 0.5rem;
+  font-weight: 800;
+}
+
+.profile-header .user-badge {
+  display: inline-block;
+  padding: 0.5rem 1.25rem;
+  border-radius: 9999px;
+  background: #ebf4ff;
+  color: #3182ce;
+  font-weight: 600;
+  text-transform: uppercase;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+/* Grille de statistiques */
 .stats-grid {
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  grid-template-columns: repeat(auto-fit, minmax(450px, 1fr));
   gap: 2rem;
-  margin-top: 2rem;
 }
 
-.stat-card {
+.stat-section {
+  background: white;
+  border-radius: 1.5rem;
   padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 4px 12px rgba(0,0,0,0.1);
-  color: white;
+  box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 8px 10px -6px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
 }
 
-.buyer-card {
-  background: linear-gradient(135deg, #007bff, #00c6ff);
+.stat-section:hover {
+  transform: translateY(-5px);
 }
 
-.seller-card {
-  background: linear-gradient(135deg, #28a745, #11998e);
+.section-title {
+  display: flex;
+  align-items: center;
+  margin-bottom: 2rem;
+  font-size: 1.5rem;
+  color: #2d3748;
+  font-weight: 700;
+  border-bottom: 2px solid #f7fafc;
+  padding-bottom: 1rem;
 }
 
-h3 { margin-bottom: 1.5rem; border-bottom: 1px solid rgba(255,255,255,0.3); padding-bottom: 0.5rem; }
-h4 { margin: 1.5rem 0 0.5rem 0; }
-.stat-items p { font-size: 1.1rem; margin-bottom: 0.5rem; }
-ul { list-style: none; padding: 0; }
-li { margin-bottom: 0.3rem; font-size: 0.95rem; opacity: 0.9; }
+/* Cartes de nombres */
+.main-metrics {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1.5rem;
+  margin-bottom: 2rem;
+}
+
+.metric-card {
+  background: #f8fafc;
+  padding: 1.5rem;
+  border-radius: 1rem;
+  text-align: center;
+}
+
+.metric-value {
+  display: block;
+  font-size: 1.75rem;
+  font-weight: 800;
+  color: #2b6cb0;
+  margin-bottom: 0.25rem;
+}
+
+.metric-label {
+  font-size: 0.875rem;
+  color: #718096;
+  text-transform: uppercase;
+  font-weight: 600;
+}
+
+/* Listes de produits */
+.product-list-container {
+  background: #fff;
+}
+
+.product-list-container h4 {
+  font-size: 1.125rem;
+  color: #4a5568;
+  margin-bottom: 1rem;
+  font-weight: 600;
+}
+
+.product-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0.75rem 0;
+  border-bottom: 1px solid #edf2f7;
+}
+
+.product-item:last-child {
+  border-bottom: none;
+}
+
+.product-name {
+  color: #2d3748;
+  font-weight: 500;
+}
+
+.product-count {
+  background: #edf2f7;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.875rem;
+  color: #4a5568;
+  font-weight: 600;
+}
+
+/* États vides */
+.empty-state {
+  text-align: center;
+  padding: 2rem;
+  color: #a0aec0;
+  font-style: italic;
+}
+
+/* Couleurs spécifiques Vendeur */
+.seller-section .metric-value {
+  color: #38a169;
+}
+
+.seller-section .user-badge {
+  background: #f0fff4;
+  color: #38a169;
+}
+
+@media (max-width: 640px) {
+  .stats-grid {
+    grid-template-columns: 1fr;
+  }
+  
+  .main-metrics {
+    grid-template-columns: 1fr;
+  }
+}

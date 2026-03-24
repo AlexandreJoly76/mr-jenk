@@ -92,24 +92,30 @@ public class ProductController {
         return new PageImpl<>(products, PageRequest.of(page, size), count);
     }
 
-    private void verifySellerRole(String token) {
+    private String getClaim(String token, String claim) {
         try {
             String jwt = token.startsWith("Bearer ") ? token.substring(7) : token;
             String payload = jwt.split("\\.")[1];
             String decodedPayload = new String(Base64.getDecoder().decode(payload));
             JsonNode json = objectMapper.readTree(decodedPayload);
-            String role = json.get("role").asText();
-            if (!"SELLER".equals(role)) {
-                throw new RuntimeException("Accès refusé");
-            }
+            return json.get(claim).asText();
         } catch (Exception e) {
-            throw new RuntimeException("Token invalide");
+            throw new RuntimeException("Token invalide : " + e.getMessage());
+        }
+    }
+
+    private void verifySellerRole(String token) {
+        String role = getClaim(token, "role");
+        if (!"SELLER".equals(role)) {
+            throw new RuntimeException("Accès réservé aux vendeurs");
         }
     }
 
     @PostMapping
     public Product createProduct(@RequestBody @Valid Product product, @RequestHeader("Authorization") String token) {
         verifySellerRole(token);
+        String userId = getClaim(token, "id");
+        product.setUserId(userId);
         return productRepository.save(product);
     }
 

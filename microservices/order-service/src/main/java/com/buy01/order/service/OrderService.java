@@ -37,74 +37,103 @@ public class OrderService {
     private final OrderProducer orderProducer;
 
     public UserStatsDTO getUserStats(String userId) {
-        Aggregation agg = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("userId").is(userId)),
-                Aggregation.group("userId")
-                        .sum("totalAmount").as("totalSpent")
-                        .count().as("totalOrders")
-        );
-        AggregationResults<Map> results = mongoTemplate.aggregate(agg, "orders", Map.class);
-        Map baseStats = results.getUniqueMappedResult();
+        try {
+            // 1. Stats de base (Total dépensé)
+            Aggregation baseAgg = Aggregation.newAggregation(
+                    Aggregation.match(Criteria.where("userId").is(userId).and("status").ne(OrderStatus.CANCELLED.name())),
+                    // On convertit le totalAmount (qui peut être un String en DB) en Double
+                    Aggregation.project()
+                            .and(ConvertOperators.ToDouble.toDouble("$totalAmount")).as("numericAmount"),
+                    Aggregation.group()
+                            .sum("numericAmount").as("totalSpent")
+                            .count().as("totalOrders")
+            );
+            
+            Map baseResults = mongoTemplate.aggregate(baseAgg, Order.class, Map.class).getUniqueMappedResult();
 
-        Aggregation topProdAgg = Aggregation.newAggregation(
-                Aggregation.match(Criteria.where("userId").is(userId)),
-                Aggregation.unwind("items"),
-                Aggregation.group("items.productId")
-                        .first("items.productName").as("productName")
-                        .count().as("count"),
-                Aggregation.sort(Sort.Direction.DESC, "count"),
-                Aggregation.limit(5)
-        );
-        List<ProductSummaryDTO> topProducts = mongoTemplate.aggregate(topProdAgg, "orders", ProductSummaryDTO.class).getMappedResults();
+            // 2. Top Produits
+            Aggregation productsAgg = Aggregation.newAggregation(
+                    Aggregation.match(Criteria.where("userId").is(userId).and("status").ne(OrderStatus.CANCELLED.name())),
+                    Aggregation.unwind("items"),
+                    Aggregation.group("items.productId")
+                            .first("items.productName").as("productName")
+                            .sum("items.quantity").as("count"),
+                    Aggregation.project("productName", "count").and("_id").as("productId"),
+                    Aggregation.sort(Sort.Direction.DESC, "count"),
+                    Aggregation.limit(5)
+            );
 
-        BigDecimal spent = (baseStats != null && baseStats.get("totalSpent") != null) 
-                ? new BigDecimal(baseStats.get("totalSpent").toString()) : BigDecimal.ZERO;
-        long count = (baseStats != null && baseStats.get("totalOrders") != null) 
-                ? Long.parseLong(baseStats.get("totalOrders").toString()) : 0;
+            List<ProductSummaryDTO> topProducts = mongoTemplate.aggregate(productsAgg, Order.class, ProductSummaryDTO.class).getMappedResults();
 
-        return UserStatsDTO.builder()
-                .totalSpent(spent)
-                .totalOrders(count)
-                .topProducts(topProducts)
-                .build();
+            double spent = 0;
+            long orders = 0;
+
+            if (baseResults != null) {
+                spent = baseResults.get("totalSpent") != null ? Double.parseDouble(baseResults.get("totalSpent").toString()) : 0;
+                orders = baseResults.get("totalOrders") != null ? Long.parseLong(baseResults.get("totalOrders").toString()) : 0;
+            }
+
+            return UserStatsDTO.builder()
+                    .totalSpent(BigDecimal.valueOf(spent))
+                    .totalOrders(orders)
+                    .topProducts(topProducts != null ? topProducts : new ArrayList<>())
+                    .build();
+        } catch (Exception e) {
+            log.error("Error user stats: {}", e.getMessage());
+            return UserStatsDTO.builder().totalSpent(BigDecimal.ZERO).totalOrders(0).topProducts(new ArrayList<>()).build();
+        }
     }
 
     public SellerStatsDTO getSellerStats(String sellerId) {
-        Aggregation agg = Aggregation.newAggregation(
-                Aggregation.unwind("items"),
-                Aggregation.match(Criteria.where("items.sellerId").is(sellerId)),
-                Aggregation.group("_id")
-                        .first("status").as("status")
-                        .sum("items.priceAtPurchase").as("orderRevenue"),
-                Aggregation.match(Criteria.where("status").is(OrderStatus.DELIVERED)),
-                Aggregation.group()
-                        .sum("orderRevenue").as("totalRevenue")
-                        .count().as("completedOrders")
-        );
-        AggregationResults<Map> results = mongoTemplate.aggregate(agg, "orders", Map.class);
-        Map baseStats = results.getUniqueMappedResult();
+        try {
+            // 1. Revenu boutique (Uniquement DELIVERED)
+            Aggregation revenueAgg = Aggregation.newAggregation(
+                    Aggregation.unwind("items"),
+                    // On filtre par vendeur et statut livré
+                    Aggregation.match(Criteria.where("items.sellerId").is(sellerId).and("status").is(OrderStatus.DELIVERED.name())),
+                    // ÉTAPE CRUCIALE : Convertir le prix (String en DB) en Double AVANT de multiplier
+                    Aggregation.project("items.quantity")
+                            .and(ConvertOperators.ToDouble.toDouble("$items.priceAtPurchase")).as("unitPrice"),
+                    Aggregation.project()
+                            .and(ArithmeticOperators.Multiply.valueOf("unitPrice").multiplyBy("quantity")).as("lineRevenue"),
+                    Aggregation.group()
+                            .sum("lineRevenue").as("totalRevenue")
+                            .count().as("completedOrders")
+            );
 
-        Aggregation bestSellersAgg = Aggregation.newAggregation(
-                Aggregation.unwind("items"),
-                Aggregation.match(Criteria.where("items.sellerId").is(sellerId)),
-                Aggregation.group("items.productId")
-                        .first("items.productName").as("productName")
-                        .count().as("count"),
-                Aggregation.sort(Sort.Direction.DESC, "count"),
-                Aggregation.limit(5)
-        );
-        List<ProductSummaryDTO> bestSellers = mongoTemplate.aggregate(bestSellersAgg, "orders", ProductSummaryDTO.class).getMappedResults();
+            Map revenueResults = mongoTemplate.aggregate(revenueAgg, Order.class, Map.class).getUniqueMappedResult();
 
-        BigDecimal revenue = (baseStats != null && baseStats.get("totalRevenue") != null) 
-                ? new BigDecimal(baseStats.get("totalRevenue").toString()) : BigDecimal.ZERO;
-        long completed = (baseStats != null && baseStats.get("completedOrders") != null) 
-                ? Long.parseLong(baseStats.get("completedOrders").toString()) : 0;
+            // 2. Best Sellers (Toutes les ventes)
+            Aggregation bestSellersAgg = Aggregation.newAggregation(
+                    Aggregation.unwind("items"),
+                    Aggregation.match(Criteria.where("items.sellerId").is(sellerId).and("status").ne(OrderStatus.CANCELLED.name())),
+                    Aggregation.group("items.productId")
+                            .first("items.productName").as("productName")
+                            .sum("items.quantity").as("count"),
+                    Aggregation.project("productName", "count").and("_id").as("productId"),
+                    Aggregation.sort(Sort.Direction.DESC, "count"),
+                    Aggregation.limit(5)
+            );
 
-        return SellerStatsDTO.builder()
-                .totalRevenue(revenue)
-                .completedOrders(completed)
-                .bestSellers(bestSellers)
-                .build();
+            List<ProductSummaryDTO> bestSellers = mongoTemplate.aggregate(bestSellersAgg, Order.class, ProductSummaryDTO.class).getMappedResults();
+
+            double rev = 0;
+            long sales = 0;
+
+            if (revenueResults != null) {
+                rev = revenueResults.get("totalRevenue") != null ? Double.parseDouble(revenueResults.get("totalRevenue").toString()) : 0;
+                sales = revenueResults.get("completedOrders") != null ? Long.parseLong(revenueResults.get("completedOrders").toString()) : 0;
+            }
+
+            return SellerStatsDTO.builder()
+                    .totalRevenue(BigDecimal.valueOf(rev))
+                    .completedOrders(sales)
+                    .bestSellers(bestSellers != null ? bestSellers : new ArrayList<>())
+                    .build();
+        } catch (Exception e) {
+            log.error("Error seller stats: {}", e.getMessage());
+            return SellerStatsDTO.builder().totalRevenue(BigDecimal.ZERO).completedOrders(0).bestSellers(new ArrayList<>()).build();
+        }
     }
 
     public Page<Order> searchOrders(String userId, String sellerId, OrderStatus status, 

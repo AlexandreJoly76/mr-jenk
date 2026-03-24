@@ -1,7 +1,6 @@
 package com.buy01.product.service;
 
 import com.buy01.order.dto.StockUpdateEvent;
-import com.buy01.product.model.Product;
 import com.buy01.product.repository.ProductRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
