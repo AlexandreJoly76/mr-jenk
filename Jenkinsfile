@@ -35,6 +35,26 @@ pipeline {
             }
         }
 
+
+        // --- 4. TESTS BACKEND & FRONTEND ---
+        // (On refait un tour complet ou on passe au frontend,
+        //  ici je laisse tes tests Frontend car le backend est déjà compilé)
+        stage('Test & Build Frontend') {
+            steps {
+                dir('frontend/buy01-web') {
+                    sh 'npm install'
+                    script {
+                        try {
+                           sh 'npm run test -- --no-watch --no-progress --browsers=ChromeHeadless'
+                        } catch (Exception e) {
+                           echo "⚠️ Warning tests Frontend"
+                        }
+                    }
+                    sh 'npm run build'
+                }
+            }
+        }
+
         // --- 2. ANALYSE SONARQUBE ---
         stage('Code Quality Analysis') {
             steps {
@@ -63,25 +83,6 @@ pipeline {
             steps {
                 timeout(time: 2, unit: 'MINUTES') {
                     waitForQualityGate abortPipeline: true
-                }
-            }
-        }
-
-        // --- 4. TESTS BACKEND & FRONTEND ---
-        // (On refait un tour complet ou on passe au frontend,
-        //  ici je laisse tes tests Frontend car le backend est déjà compilé)
-        stage('Test & Build Frontend') {
-            steps {
-                dir('frontend/buy01-web') {
-                    sh 'npm install'
-                    script {
-                        try {
-                           sh 'npm run test -- --no-watch --no-progress --browsers=ChromeHeadless'
-                        } catch (Exception e) {
-                           echo "⚠️ Warning tests Frontend"
-                        }
-                    }
-                    sh 'npm run build'
                 }
             }
         }
