@@ -1,5 +1,6 @@
-import {Component, inject, OnInit, signal} from '@angular/core';
+import {Component, inject, OnInit, signal, computed} from '@angular/core';
 import {CommonModule} from '@angular/common';
+import {FormsModule} from '@angular/forms';
 import {Product, ProductService} from '../../services/product.service';
 import {CartService} from '../../services/cart.service';
 import {Carousel} from '../../shared/carousel/carousel';
@@ -8,7 +9,8 @@ import {Carousel} from '../../shared/carousel/carousel';
   selector: 'app-home',
   imports: [
     CommonModule,
-    Carousel
+    Carousel,
+    FormsModule
   ],
   templateUrl: './home.html',
   styleUrl: './home.css',
@@ -19,17 +21,45 @@ export class Home implements OnInit{
   private cartService = inject(CartService);
   protected readonly Number = Number;
 
-  // RÈGLE : Gestion d'état via Signal
-  // On initialise avec un tableau vide
+  // État des produits
   products = signal<Product[]>([]);
+  
+  // États des filtres
+  searchTerm = signal<string>('');
+  selectedCategory = signal<string>('');
+  minPrice = signal<number | null>(null);
+  maxPrice = signal<number | null>(null);
+
+  // Catégories uniques extraites des produits
+  categories = computed(() => {
+    const cats = this.products().map(p => p.category).filter(c => !!c);
+    return [...new Set(cats)].sort();
+  });
+
+  // Liste filtrée calculée automatiquement
+  filteredProducts = computed(() => {
+    return this.products().filter(product => {
+      const matchesSearch = !this.searchTerm() || 
+        product.name.toLowerCase().includes(this.searchTerm().toLowerCase()) ||
+        product.description.toLowerCase().includes(this.searchTerm().toLowerCase());
+      
+      const matchesCategory = !this.selectedCategory() || 
+        product.category === this.selectedCategory();
+      
+      const matchesMinPrice = this.minPrice() === null || 
+        product.price >= (this.minPrice() ?? 0);
+      
+      const matchesMaxPrice = this.maxPrice() === null || 
+        product.price <= (this.maxPrice() ?? Infinity);
+
+      return matchesSearch && matchesCategory && matchesMinPrice && matchesMaxPrice;
+    });
+  });
 
   ngOnInit(): void {
     this.productService.getAllProducts().subscribe({
       next: (data) => {
-        // RÈGLE : Mise à jour du signal via .set()
         this.products.set(data);
-        console.log(data);
-        console.log('Produits reçus (Signal mis à jour):', this.products());
       },
       error: (err) => {
         console.error('Erreur de chargement:', err);
@@ -39,10 +69,7 @@ export class Home implements OnInit{
 
   addToCart(productId: string): void {
     const product = this.products().find(p => p.id === productId);
-    console.log('Tentative d\'ajout au panier:', product);
-    
     if (product && Number(product.quantity) <= 0) {
-      console.warn('Bloqué: Stock à 0', product.quantity);
       alert('Désolé, ce produit est épuisé.');
       return;
     }
@@ -57,5 +84,4 @@ export class Home implements OnInit{
       }
     });
   }
-
 }
