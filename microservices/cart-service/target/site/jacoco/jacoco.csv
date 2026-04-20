@@ -1,6 +1,0 @@
-GROUP,PACKAGE,CLASS,INSTRUCTION_MISSED,INSTRUCTION_COVERED,BRANCH_MISSED,BRANCH_COVERED,LINE_MISSED,LINE_COVERED,COMPLEXITY_MISSED,COMPLEXITY_COVERED,METHOD_MISSED,METHOD_COVERED
-cart-service,com.buy01.cart,CartServiceApplication,5,3,0,0,2,1,1,1,1,1
-cart-service,com.buy01.cart.service,CartService,23,240,1,7,4,49,2,14,1,11
-cart-service,com.buy01.cart.controller,CartController,1,86,1,1,0,18,1,6,0,6
-cart-service,com.buy01.cart.config,GlobalExceptionHandler,0,17,0,0,0,4,0,2,0,2
-cart-service,com.buy01.cart.config,WebClientConfig,5,0,0,0,2,0,2,0,2,0

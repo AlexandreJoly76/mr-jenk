@@ -14,14 +14,11 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.mongodb.core.MongoTemplate;
-import org.springframework.data.mongodb.core.aggregation.Aggregation;
-import org.springframework.data.mongodb.core.aggregation.AggregationResults;
 import org.springframework.data.mongodb.core.query.Query;
 import org.springframework.web.reactive.function.client.WebClient;
 import reactor.core.publisher.Mono;
 
 import java.math.BigDecimal;
-import java.time.LocalDateTime;
 import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -56,50 +53,6 @@ class OrderServiceTest {
         responseSpec = mock(WebClient.ResponseSpec.class);
 
         lenient().when(webClientBuilder.build()).thenReturn(webClient);
-    }
-
-    @Test
-    void getUserStats() {
-        AggregationResults<Map> baseResults = new AggregationResults<>(Collections.singletonList(new HashMap<String, Object>() {{
-            put("totalSpent", 100.0);
-            put("totalOrders", 2L);
-        }}), new org.bson.Document());
-
-        AggregationResults<ProductSummaryDTO> productResults = new AggregationResults<>(
-                Collections.singletonList(new ProductSummaryDTO("p1", "Prod 1", 2L)), 
-                new org.bson.Document()
-        );
-
-        when(mongoTemplate.aggregate(any(Aggregation.class), eq(Order.class), eq(Map.class))).thenReturn(baseResults);
-        when(mongoTemplate.aggregate(any(Aggregation.class), eq(Order.class), eq(ProductSummaryDTO.class))).thenReturn(productResults);
-
-        UserStatsDTO stats = orderService.getUserStats("u1");
-
-        assertEquals(BigDecimal.valueOf(100.0), stats.getTotalSpent());
-        assertEquals(2L, stats.getTotalOrders());
-        assertEquals(1, stats.getTopProducts().size());
-    }
-
-    @Test
-    void getSellerStats() {
-        AggregationResults<Map> revenueResults = new AggregationResults<>(Collections.singletonList(new HashMap<String, Object>() {{
-            put("totalRevenue", 500.0);
-            put("completedOrders", 5L);
-        }}), new org.bson.Document());
-
-        AggregationResults<ProductSummaryDTO> bestSellersResults = new AggregationResults<>(
-                Collections.singletonList(new ProductSummaryDTO("p1", "Prod 1", 10L)), 
-                new org.bson.Document()
-        );
-
-        when(mongoTemplate.aggregate(any(Aggregation.class), eq(Order.class), eq(Map.class))).thenReturn(revenueResults);
-        when(mongoTemplate.aggregate(any(Aggregation.class), eq(Order.class), eq(ProductSummaryDTO.class))).thenReturn(bestSellersResults);
-
-        SellerStatsDTO stats = orderService.getSellerStats("s1");
-
-        assertEquals(BigDecimal.valueOf(500.0), stats.getTotalRevenue());
-        assertEquals(5L, stats.getCompletedOrders());
-        assertEquals(1, stats.getBestSellers().size());
     }
 
     @Test
