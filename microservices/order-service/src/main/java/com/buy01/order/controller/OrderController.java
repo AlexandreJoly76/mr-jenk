@@ -25,6 +25,8 @@ public class OrderController {
 
     private final OrderService orderService;
     private final ObjectMapper objectMapper = new ObjectMapper();
+    private String  seller = "SELLER";
+    private String errors = "Accès réservé aux vendeurs";
 
     private String getClaim(String token, String claim) {
         try {
@@ -48,8 +50,8 @@ public class OrderController {
     @GetMapping("/stats/seller")
     public SellerStatsDTO getSellerStats(@RequestHeader("Authorization") String token) {
         String role = getClaim(token, "role");
-        if (!"SELLER".equals(role)) {
-            throw new RuntimeException("Accès réservé aux vendeurs");
+        if (!seller.equals(role)) {
+            throw new RuntimeException(errors);
         }
         String sellerId = getClaim(token, "id");
         return orderService.getSellerStats(sellerId);
@@ -78,8 +80,8 @@ public class OrderController {
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
         String role = getClaim(token, "role");
-        if (!"SELLER".equals(role)) {
-            throw new RuntimeException("Accès réservé aux vendeurs");
+        if (!seller.equals(role)) {
+            throw new RuntimeException(errors);
         }
         String sellerId = getClaim(token, "id");
         return orderService.searchOrders(null, sellerId, status, start, end, keyword, PageRequest.of(page, size));
@@ -97,8 +99,8 @@ public class OrderController {
             @PathVariable String id, 
             @RequestParam OrderStatus status) {
         String role = getClaim(token, "role");
-        if (!"SELLER".equals(role)) {
-            throw new RuntimeException("Accès réservé aux vendeurs");
+        if (!seller.equals(role)) {
+            throw new RuntimeException(errors);
         }
         String sellerId = getClaim(token, "id");
         return orderService.updateOrderStatus(sellerId, id, status);
