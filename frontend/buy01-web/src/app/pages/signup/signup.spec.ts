@@ -32,6 +32,7 @@ describe('Signup', () => {
     userService = TestBed.inject(UserService);
     mediaService = TestBed.inject(Media);
     router = TestBed.inject(Router);
+    localStorage.clear();
     fixture.detectChanges();
   });
 

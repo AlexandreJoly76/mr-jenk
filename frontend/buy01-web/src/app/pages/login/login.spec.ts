@@ -28,6 +28,7 @@ describe('Login', () => {
     component = fixture.componentInstance;
     userService = TestBed.inject(UserService);
     router = TestBed.inject(Router);
+    localStorage.clear();
     fixture.detectChanges();
   });
 
@@ -91,6 +92,7 @@ describe('Login', () => {
 
   it('should show error message on login failure', () => {
     spyOn(userService, 'login').and.returnValue(throwError(() => new Error('Login failed')));
+    spyOn(console, 'error');
     
     component.loginForm.setValue({
       email: 'test@example.com',
@@ -100,6 +102,7 @@ describe('Login', () => {
     component.onSubmit();
     
     expect(component.message()).toBe('Email ou mot de passe incorrect.');
+    expect(console.error).toHaveBeenCalled();
   });
 
   it('should not call userService.login if form is invalid', () => {
