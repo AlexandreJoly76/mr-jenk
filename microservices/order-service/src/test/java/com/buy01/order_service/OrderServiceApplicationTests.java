@@ -1,0 +1,15 @@
+package com.buy01.order_service;
+
+import org.junit.jupiter.api.Test;
+import org.springframework.boot.test.context.SpringBootTest;
+
+@SpringBootTest
+class OrderServiceApplicationTests {
+
+	@Test
+	void contextLoads() {
+		//TODO: ajouter des tests unitaires
+
+	}
+
+}

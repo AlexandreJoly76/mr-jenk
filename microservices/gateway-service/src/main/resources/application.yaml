@@ -36,14 +36,12 @@ spring:
                 - Path=/user-service/**
               filters:
                 - StripPrefix=1
-          # --- NOUVELLE ROUTE ---
             - id: product-service-route
               uri: lb://PRODUCT-SERVICE
               predicates:
                 - Path=/product-service/**
               filters:
                 - StripPrefix=1
-          # ... (User et Product routes au dessus)
             - id: media-service-route
               uri: lb://MEDIA-SERVICE
               predicates:

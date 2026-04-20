@@ -16,7 +16,6 @@ Voici le flux de communication :
 `Frontend (Angular) -> Gateway API -> Microservices`
 
 ## Technologies Utilisées
-
 ### Backend
 - **Java 17**
 - **Spring Boot 3**
