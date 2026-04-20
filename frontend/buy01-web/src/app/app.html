@@ -1,52 +1,48 @@
-<nav style="background: #333; color: white; padding: 0.8rem 1.5rem; margin-bottom: 20px; display: flex; justify-content: space-between; align-items: center;">
-
-  <div style="display: flex; gap: 20px; align-items: center;">
-    <a routerLink="/" style="color: white; text-decoration: none; font-weight: bold; font-size: 1.2rem;">Buy-01 🛒</a>
-
-    @if (userService.currentUser()?.role === 'SELLER') {
-      <a routerLink="/dashboard" style="color: #ff9800; text-decoration: none;">Mon Espace Vendeur</a>
-    }
-    <a routerLink="/cart" style="color: white; text-decoration: none; display: flex; align-items: center; gap: 5px;">
-      🛒 Panier
-    </a>
-    <a routerLink="/orders" style="color: white; text-decoration: none;">📦 Commandes</a>
-    <a routerLink="/profile" style="color: white; text-decoration: none;">👤 Profil</a>
+<nav class="navbar">
+  <div class="navbar-brand">
+    <a routerLink="/" class="logo">Buy-01 🛒</a>
+    <button class="menu-toggle" (click)="toggleMenu()" aria-label="Toggle navigation">
+      <span class="bar"></span>
+      <span class="bar"></span>
+      <span class="bar"></span>
+    </button>
   </div>
 
-  <div style="display: flex; gap: 15px; align-items: center;">
+  <div class="navbar-links" [class.active]="isMenuOpen()">
+    <div class="nav-main">
+      @if (userService.currentUser()?.role === 'SELLER') {
+        <a routerLink="/dashboard" class="nav-item seller-link" (click)="isMenuOpen.set(false)">👨‍💼 Vendeur</a>
+      }
+      <a routerLink="/cart" class="nav-item" (click)="isMenuOpen.set(false)">🛒 Panier</a>
+      <a routerLink="/orders" class="nav-item" (click)="isMenuOpen.set(false)">📦 Commandes</a>
+      <a routerLink="/profile" class="nav-item" (click)="isMenuOpen.set(false)">👤 Profil</a>
+    </div>
 
-    @if (userService.currentUser(); as user) {
-
-      <div style="display: flex; align-items: center; gap: 10px;">
-        @if (user.avatar) {
-          <img [ngSrc]="'https://localhost:8080/media-service/api/media/' + user.avatar"
-               height="35"
-                width="35"
-               style="width: 35px; height: 35px; border-radius: 50%; object-fit: cover; border: 2px solid white;" alt="user Avatar">
-        } @else if(userService.currentUser()?.role === 'SELLER') {
-          <div style="width: 35px; height: 35px; border-radius: 50%; background: #555; display: flex; align-items: center; justify-content: center; font-weight: bold;">
-            {{ user.sub.charAt(0).toUpperCase() }}
-          </div>
-        }
-
-        <span>Bonjour, <strong>{{ user.sub }}</strong></span>
-
-        <button (click)="userService.logout()"
-                style="background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 4px; cursor: pointer; margin-left: 10px;">
-          Déconnexion
-        </button>
-      </div>
-
-    } @else {
-
-      <a routerLink="/login" style="color: white; text-decoration: none;">Connexion</a>
-      <a routerLink="/signup" style="background: #28a745; color: white; padding: 5px 10px; border-radius: 4px; text-decoration: none;">Inscription</a>
-
-    }
+    <div class="nav-user">
+      @if (userService.currentUser(); as user) {
+        <div class="user-info">
+          @if (user.avatar) {
+            <img [ngSrc]="'https://localhost:8080/media-service/api/media/' + user.avatar"
+                 height="35" width="35" class="user-avatar" alt="Avatar">
+          } @else {
+            <div class="user-initial">{{ user.sub.charAt(0).toUpperCase() }}</div>
+          }
+          <span class="welcome-text">Salut, <strong>{{ user.sub }}</strong></span>
+          <button (click)="userService.logout(); isMenuOpen.set(false)" class="btn-logout">Quitter</button>
+        </div>
+      } @else {
+        <div class="auth-links">
+          <a routerLink="/login" class="nav-item" (click)="isMenuOpen.set(false)">Connexion</a>
+          <a routerLink="/signup" class="btn-signup" (click)="isMenuOpen.set(false)">Inscription</a>
+        </div>
+      }
+    </div>
   </div>
 </nav>
 
-<div class="container" style="padding: 20px;">
-  <h1>VERSION 2.0 - DÉPLOIEMENT AUTO 🚀</h1>
+<div class="main-container">
+  <div class="banner">
+    VERSION 2.0 - DÉPLOIEMENT AUTO 🚀
+  </div>
   <router-outlet></router-outlet>
 </div>
