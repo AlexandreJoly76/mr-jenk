@@ -18,10 +18,10 @@ describe('App', () => {
     expect(app).toBeTruthy();
   });
 
-  it('should render title', () => {
+  it('should render version banner', () => {
     const fixture = TestBed.createComponent(App);
     fixture.detectChanges();
     const compiled = fixture.nativeElement as HTMLElement;
-    expect(compiled.querySelector('h1')?.textContent).toContain('VERSION 2.0 - DÉPLOIEMENT AUTO 🚀');
+    expect(compiled.querySelector('.banner')?.textContent).toContain('VERSION 2.0 - DÉPLOIEMENT AUTO 🚀');
   });
 });

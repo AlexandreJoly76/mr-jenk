@@ -1,0 +1,295 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrderService.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">order-service</a> &gt; <a href="index.source.html" class="el_package">com.buy01.order.service</a> &gt; <span class="el_source">OrderService.java</span></div><h1>OrderService.java</h1><pre class="source lang-java linenums">package com.buy01.order.service;
+
+import com.buy01.order.dto.*;
+import com.buy01.order.model.Order;
+import com.buy01.order.model.OrderItem;
+import com.buy01.order.model.OrderStatus;
+import com.buy01.order.repository.OrderRepository;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
+import org.springframework.data.mongodb.core.MongoTemplate;
+import org.springframework.data.mongodb.core.aggregation.*;
+import org.springframework.data.mongodb.core.query.Criteria;
+import org.springframework.data.mongodb.core.query.Query;
+import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.web.reactive.function.client.WebClient;
+
+import java.math.BigDecimal;
+import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
+@Service
+@RequiredArgsConstructor
+<span class="fc" id="L31">@Slf4j</span>
+public class OrderService {
+
+    private final OrderRepository orderRepository;
+    private final WebClient.Builder webClientBuilder;
+    private final MongoTemplate mongoTemplate;
+    private final OrderProducer orderProducer;
+
+    public UserStatsDTO getUserStats(String userId) {
+        try {
+            // 1. Stats de base (Total dépensé)
+<span class="fc" id="L42">            Aggregation baseAgg = Aggregation.newAggregation(</span>
+<span class="fc" id="L43">                    Aggregation.match(Criteria.where(&quot;userId&quot;).is(userId).and(&quot;status&quot;).ne(OrderStatus.CANCELLED.name())),</span>
+                    // On convertit le totalAmount (qui peut être un String en DB) en Double
+<span class="fc" id="L45">                    Aggregation.project()</span>
+<span class="fc" id="L46">                            .and(ConvertOperators.ToDouble.toDouble(&quot;$totalAmount&quot;)).as(&quot;numericAmount&quot;),</span>
+<span class="fc" id="L47">                    Aggregation.group()</span>
+<span class="fc" id="L48">                            .sum(&quot;numericAmount&quot;).as(&quot;totalSpent&quot;)</span>
+<span class="fc" id="L49">                            .count().as(&quot;totalOrders&quot;)</span>
+            );
+            
+<span class="fc" id="L52">            Map baseResults = mongoTemplate.aggregate(baseAgg, Order.class, Map.class).getUniqueMappedResult();</span>
+
+            // 2. Top Produits
+<span class="fc" id="L55">            Aggregation productsAgg = Aggregation.newAggregation(</span>
+<span class="fc" id="L56">                    Aggregation.match(Criteria.where(&quot;userId&quot;).is(userId).and(&quot;status&quot;).ne(OrderStatus.CANCELLED.name())),</span>
+<span class="fc" id="L57">                    Aggregation.unwind(&quot;items&quot;),</span>
+<span class="fc" id="L58">                    Aggregation.group(&quot;items.productId&quot;)</span>
+<span class="fc" id="L59">                            .first(&quot;items.productName&quot;).as(&quot;productName&quot;)</span>
+<span class="fc" id="L60">                            .sum(&quot;items.quantity&quot;).as(&quot;count&quot;),</span>
+<span class="fc" id="L61">                    Aggregation.project(&quot;productName&quot;, &quot;count&quot;).and(&quot;_id&quot;).as(&quot;productId&quot;),</span>
+<span class="fc" id="L62">                    Aggregation.sort(Sort.Direction.DESC, &quot;count&quot;),</span>
+<span class="fc" id="L63">                    Aggregation.limit(5)</span>
+            );
+
+<span class="fc" id="L66">            List&lt;ProductSummaryDTO&gt; topProducts = mongoTemplate.aggregate(productsAgg, Order.class, ProductSummaryDTO.class).getMappedResults();</span>
+
+<span class="fc" id="L68">            double spent = 0;</span>
+<span class="fc" id="L69">            long orders = 0;</span>
+
+<span class="pc bpc" id="L71" title="1 of 2 branches missed.">            if (baseResults != null) {</span>
+<span class="pc bpc" id="L72" title="1 of 2 branches missed.">                spent = baseResults.get(&quot;totalSpent&quot;) != null ? Double.parseDouble(baseResults.get(&quot;totalSpent&quot;).toString()) : 0;</span>
+<span class="pc bpc" id="L73" title="1 of 2 branches missed.">                orders = baseResults.get(&quot;totalOrders&quot;) != null ? Long.parseLong(baseResults.get(&quot;totalOrders&quot;).toString()) : 0;</span>
+            }
+
+<span class="fc" id="L76">            return UserStatsDTO.builder()</span>
+<span class="fc" id="L77">                    .totalSpent(BigDecimal.valueOf(spent))</span>
+<span class="fc" id="L78">                    .totalOrders(orders)</span>
+<span class="pc bpc" id="L79" title="1 of 2 branches missed.">                    .topProducts(topProducts != null ? topProducts : new ArrayList&lt;&gt;())</span>
+<span class="fc" id="L80">                    .build();</span>
+<span class="nc" id="L81">        } catch (Exception e) {</span>
+<span class="nc" id="L82">            log.error(&quot;Error user stats: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L83">            return UserStatsDTO.builder().totalSpent(BigDecimal.ZERO).totalOrders(0).topProducts(new ArrayList&lt;&gt;()).build();</span>
+        }
+    }
+
+    public SellerStatsDTO getSellerStats(String sellerId) {
+        try {
+            // 1. Revenu boutique (Uniquement DELIVERED)
+<span class="fc" id="L90">            Aggregation revenueAgg = Aggregation.newAggregation(</span>
+<span class="fc" id="L91">                    Aggregation.unwind(&quot;items&quot;),</span>
+                    // On filtre par vendeur et statut livré
+<span class="fc" id="L93">                    Aggregation.match(Criteria.where(&quot;items.sellerId&quot;).is(sellerId).and(&quot;status&quot;).is(OrderStatus.DELIVERED.name())),</span>
+                    // ÉTAPE CRUCIALE : Convertir le prix (String en DB) en Double AVANT de multiplier
+<span class="fc" id="L95">                    Aggregation.project(&quot;items.quantity&quot;)</span>
+<span class="fc" id="L96">                            .and(ConvertOperators.ToDouble.toDouble(&quot;$items.priceAtPurchase&quot;)).as(&quot;unitPrice&quot;),</span>
+<span class="fc" id="L97">                    Aggregation.project()</span>
+<span class="fc" id="L98">                            .and(ArithmeticOperators.Multiply.valueOf(&quot;unitPrice&quot;).multiplyBy(&quot;quantity&quot;)).as(&quot;lineRevenue&quot;),</span>
+<span class="fc" id="L99">                    Aggregation.group()</span>
+<span class="fc" id="L100">                            .sum(&quot;lineRevenue&quot;).as(&quot;totalRevenue&quot;)</span>
+<span class="fc" id="L101">                            .count().as(&quot;completedOrders&quot;)</span>
+            );
+
+<span class="fc" id="L104">            Map revenueResults = mongoTemplate.aggregate(revenueAgg, Order.class, Map.class).getUniqueMappedResult();</span>
+
+            // 2. Best Sellers (Toutes les ventes)
+<span class="fc" id="L107">            Aggregation bestSellersAgg = Aggregation.newAggregation(</span>
+<span class="fc" id="L108">                    Aggregation.unwind(&quot;items&quot;),</span>
+<span class="fc" id="L109">                    Aggregation.match(Criteria.where(&quot;items.sellerId&quot;).is(sellerId).and(&quot;status&quot;).ne(OrderStatus.CANCELLED.name())),</span>
+<span class="fc" id="L110">                    Aggregation.group(&quot;items.productId&quot;)</span>
+<span class="fc" id="L111">                            .first(&quot;items.productName&quot;).as(&quot;productName&quot;)</span>
+<span class="fc" id="L112">                            .sum(&quot;items.quantity&quot;).as(&quot;count&quot;),</span>
+<span class="fc" id="L113">                    Aggregation.project(&quot;productName&quot;, &quot;count&quot;).and(&quot;_id&quot;).as(&quot;productId&quot;),</span>
+<span class="fc" id="L114">                    Aggregation.sort(Sort.Direction.DESC, &quot;count&quot;),</span>
+<span class="fc" id="L115">                    Aggregation.limit(5)</span>
+            );
+
+<span class="fc" id="L118">            List&lt;ProductSummaryDTO&gt; bestSellers = mongoTemplate.aggregate(bestSellersAgg, Order.class, ProductSummaryDTO.class).getMappedResults();</span>
+
+<span class="fc" id="L120">            double rev = 0;</span>
+<span class="fc" id="L121">            long sales = 0;</span>
+
+<span class="pc bpc" id="L123" title="1 of 2 branches missed.">            if (revenueResults != null) {</span>
+<span class="pc bpc" id="L124" title="1 of 2 branches missed.">                rev = revenueResults.get(&quot;totalRevenue&quot;) != null ? Double.parseDouble(revenueResults.get(&quot;totalRevenue&quot;).toString()) : 0;</span>
+<span class="pc bpc" id="L125" title="1 of 2 branches missed.">                sales = revenueResults.get(&quot;completedOrders&quot;) != null ? Long.parseLong(revenueResults.get(&quot;completedOrders&quot;).toString()) : 0;</span>
+            }
+
+<span class="fc" id="L128">            return SellerStatsDTO.builder()</span>
+<span class="fc" id="L129">                    .totalRevenue(BigDecimal.valueOf(rev))</span>
+<span class="fc" id="L130">                    .completedOrders(sales)</span>
+<span class="pc bpc" id="L131" title="1 of 2 branches missed.">                    .bestSellers(bestSellers != null ? bestSellers : new ArrayList&lt;&gt;())</span>
+<span class="fc" id="L132">                    .build();</span>
+<span class="nc" id="L133">        } catch (Exception e) {</span>
+<span class="nc" id="L134">            log.error(&quot;Error seller stats: {}&quot;, e.getMessage());</span>
+<span class="nc" id="L135">            return SellerStatsDTO.builder().totalRevenue(BigDecimal.ZERO).completedOrders(0).bestSellers(new ArrayList&lt;&gt;()).build();</span>
+        }
+    }
+
+    public Page&lt;Order&gt; searchOrders(String userId, String sellerId, OrderStatus status, 
+                                   LocalDateTime start, LocalDateTime end, String keyword, Pageable pageable) {
+<span class="fc" id="L141">        Query query = new Query().with(pageable);</span>
+<span class="fc" id="L142">        List&lt;Criteria&gt; criteriaList = new ArrayList&lt;&gt;();</span>
+
+<span class="pc bpc" id="L144" title="1 of 2 branches missed.">        if (userId != null) criteriaList.add(Criteria.where(&quot;userId&quot;).is(userId));</span>
+<span class="pc bpc" id="L145" title="1 of 2 branches missed.">        if (sellerId != null) criteriaList.add(Criteria.where(&quot;items.sellerId&quot;).is(sellerId));</span>
+<span class="pc bpc" id="L146" title="1 of 2 branches missed.">        if (status != null) criteriaList.add(Criteria.where(&quot;status&quot;).is(status));</span>
+<span class="pc bpc" id="L147" title="3 of 4 branches missed.">        if (start != null &amp;&amp; end != null) criteriaList.add(Criteria.where(&quot;createdAt&quot;).gte(start).lte(end));</span>
+<span class="pc bpc" id="L148" title="1 of 2 branches missed.">        if (keyword != null) criteriaList.add(Criteria.where(&quot;items.productName&quot;).regex(keyword, &quot;i&quot;));</span>
+
+<span class="pc bpc" id="L150" title="1 of 2 branches missed.">        if (!criteriaList.isEmpty()) {</span>
+<span class="fc" id="L151">            query.addCriteria(new Criteria().andOperator(criteriaList.toArray(new Criteria[0])));</span>
+        }
+
+<span class="fc" id="L154">        long count = mongoTemplate.count(query, Order.class);</span>
+<span class="fc" id="L155">        List&lt;Order&gt; orders = mongoTemplate.find(query, Order.class);</span>
+
+<span class="fc" id="L157">        return new PageImpl&lt;&gt;(orders, pageable, count);</span>
+    }
+
+    public Order cancelOrder(String userId, String orderId) {
+<span class="fc" id="L161">        Order order = orderRepository.findById(orderId)</span>
+<span class="fc" id="L162">                .orElseThrow(() -&gt; new RuntimeException(&quot;Commande non trouvée&quot;));</span>
+
+<span class="fc bfc" id="L164" title="All 2 branches covered.">        if (!order.getUserId().equals(userId)) {</span>
+<span class="fc" id="L165">            throw new RuntimeException(&quot;Accès refusé&quot;);</span>
+        }
+
+<span class="fc bfc" id="L168" title="All 2 branches covered.">        if (order.getStatus() != OrderStatus.PENDING) {</span>
+<span class="fc" id="L169">            throw new RuntimeException(&quot;Seules les commandes en attente peuvent être annulées&quot;);</span>
+        }
+
+<span class="fc" id="L172">        order.setStatus(OrderStatus.CANCELLED);</span>
+<span class="fc" id="L173">        order.setUpdatedAt(LocalDateTime.now());</span>
+<span class="fc" id="L174">        return orderRepository.save(order);</span>
+    }
+
+    public void deleteOrder(String userId, String orderId) {
+<span class="fc" id="L178">        Order order = orderRepository.findById(orderId)</span>
+<span class="pc" id="L179">                .orElseThrow(() -&gt; new RuntimeException(&quot;Commande non trouvée&quot;));</span>
+
+<span class="pc bpc" id="L181" title="1 of 2 branches missed.">        if (!order.getUserId().equals(userId)) {</span>
+<span class="nc" id="L182">            throw new RuntimeException(&quot;Accès refusé&quot;);</span>
+        }
+
+<span class="pc bpc" id="L185" title="3 of 4 branches missed.">        if (order.getStatus() != OrderStatus.DELIVERED &amp;&amp; order.getStatus() != OrderStatus.CANCELLED) {</span>
+<span class="nc" id="L186">            throw new RuntimeException(&quot;Impossible de supprimer une commande active&quot;);</span>
+        }
+
+<span class="fc" id="L189">        orderRepository.deleteById(orderId);</span>
+<span class="fc" id="L190">    }</span>
+
+    public Order updateOrderStatus(String sellerId, String orderId, OrderStatus newStatus) {
+<span class="fc" id="L193">        Order order = orderRepository.findById(orderId)</span>
+<span class="pc" id="L194">                .orElseThrow(() -&gt; new RuntimeException(&quot;Commande non trouvée&quot;));</span>
+
+<span class="fc" id="L196">        boolean isSellerOfOrder = order.getItems().stream()</span>
+<span class="fc" id="L197">                .anyMatch(item -&gt; item.getSellerId().equals(sellerId));</span>
+
+<span class="pc bpc" id="L199" title="1 of 2 branches missed.">        if (!isSellerOfOrder) {</span>
+<span class="nc" id="L200">            throw new RuntimeException(&quot;Accès refusé&quot;);</span>
+        }
+
+<span class="pc bpc" id="L203" title="2 of 4 branches missed.">        if (order.getStatus() == OrderStatus.PENDING &amp;&amp; newStatus == OrderStatus.PAID) {</span>
+<span class="fc" id="L204">            order.getItems().forEach(item -&gt; </span>
+<span class="fc" id="L205">                orderProducer.sendStockUpdate(item.getProductId(), item.getQuantity())</span>
+            );
+        }
+
+<span class="fc" id="L209">        order.setStatus(newStatus);</span>
+<span class="fc" id="L210">        order.setUpdatedAt(LocalDateTime.now());</span>
+<span class="fc" id="L211">        return orderRepository.save(order);</span>
+    }
+
+    @Transactional
+    public Order redoOrder(String userId, String orderId, String token) {
+<span class="fc" id="L216">        Order oldOrder = orderRepository.findById(orderId)</span>
+<span class="pc" id="L217">                .orElseThrow(() -&gt; new RuntimeException(&quot;Commande non trouvée&quot;));</span>
+
+<span class="pc bpc" id="L219" title="1 of 2 branches missed.">        if (!oldOrder.getUserId().equals(userId)) {</span>
+<span class="nc" id="L220">            throw new RuntimeException(&quot;Accès refusé&quot;);</span>
+        }
+
+<span class="fc" id="L223">        Order newOrder = Order.builder()</span>
+<span class="fc" id="L224">                .userId(userId)</span>
+<span class="fc" id="L225">                .items(oldOrder.getItems())</span>
+<span class="fc" id="L226">                .totalAmount(oldOrder.getTotalAmount())</span>
+<span class="fc" id="L227">                .status(OrderStatus.PENDING)</span>
+<span class="fc" id="L228">                .paymentMethod(oldOrder.getPaymentMethod())</span>
+<span class="fc" id="L229">                .shippingAddress(oldOrder.getShippingAddress())</span>
+<span class="fc" id="L230">                .createdAt(LocalDateTime.now())</span>
+<span class="fc" id="L231">                .updatedAt(LocalDateTime.now())</span>
+<span class="fc" id="L232">                .build();</span>
+
+<span class="fc" id="L234">        return orderRepository.save(newOrder);</span>
+    }
+
+    @Transactional
+    public Order checkout(String userId, CheckoutRequest request, String token) {
+<span class="fc" id="L239">        CartDTO cart = fetchCart(token);</span>
+        
+<span class="pc bpc" id="L241" title="2 of 4 branches missed.">        if (cart.getItems() == null || cart.getItems().isEmpty()) {</span>
+<span class="nc" id="L242">            throw new RuntimeException(&quot;Le panier est vide&quot;);</span>
+        }
+
+<span class="fc" id="L245">        BigDecimal totalAmount = cart.getItems().stream()</span>
+<span class="fc" id="L246">                .map(item -&gt; item.getPrice().multiply(BigDecimal.valueOf(item.getQuantity())))</span>
+<span class="fc" id="L247">                .reduce(BigDecimal.ZERO, BigDecimal::add);</span>
+
+<span class="fc" id="L249">        List&lt;OrderItem&gt; orderItems = cart.getItems().stream()</span>
+<span class="fc" id="L250">                .map(item -&gt; OrderItem.builder()</span>
+<span class="fc" id="L251">                        .productId(item.getProductId())</span>
+<span class="fc" id="L252">                        .productName(item.getProductName())</span>
+<span class="fc" id="L253">                        .priceAtPurchase(item.getPrice())</span>
+<span class="fc" id="L254">                        .quantity(item.getQuantity())</span>
+<span class="fc" id="L255">                        .sellerId(item.getSellerId())</span>
+<span class="fc" id="L256">                        .build())</span>
+<span class="fc" id="L257">                .collect(Collectors.toList());</span>
+
+<span class="fc" id="L259">        Order order = Order.builder()</span>
+<span class="fc" id="L260">                .userId(userId)</span>
+<span class="fc" id="L261">                .items(orderItems)</span>
+<span class="fc" id="L262">                .totalAmount(totalAmount)</span>
+<span class="fc" id="L263">                .status(OrderStatus.PENDING)</span>
+<span class="fc" id="L264">                .paymentMethod(request.getPaymentMethod())</span>
+<span class="fc" id="L265">                .shippingAddress(request.getShippingAddress())</span>
+<span class="fc" id="L266">                .createdAt(LocalDateTime.now())</span>
+<span class="fc" id="L267">                .updatedAt(LocalDateTime.now())</span>
+<span class="fc" id="L268">                .build();</span>
+
+<span class="fc" id="L270">        Order savedOrder = orderRepository.save(order);</span>
+<span class="fc" id="L271">        clearCart(token);</span>
+<span class="fc" id="L272">        return savedOrder;</span>
+    }
+
+    private CartDTO fetchCart(String token) {
+<span class="fc" id="L276">        return webClientBuilder.build()</span>
+<span class="fc" id="L277">                .get()</span>
+<span class="fc" id="L278">                .uri(&quot;http://cart-service/api/carts&quot;)</span>
+<span class="fc" id="L279">                .header(&quot;Authorization&quot;, token)</span>
+<span class="fc" id="L280">                .retrieve()</span>
+<span class="fc" id="L281">                .bodyToMono(CartDTO.class)</span>
+<span class="fc" id="L282">                .block();</span>
+    }
+
+    private void clearCart(String token) {
+<span class="fc" id="L286">        webClientBuilder.build()</span>
+<span class="fc" id="L287">                .delete()</span>
+<span class="fc" id="L288">                .uri(&quot;http://cart-service/api/carts/clear&quot;)</span>
+<span class="fc" id="L289">                .header(&quot;Authorization&quot;, token)</span>
+<span class="fc" id="L290">                .retrieve()</span>
+<span class="fc" id="L291">                .toBodilessEntity()</span>
+<span class="fc" id="L292">                .block();</span>
+<span class="fc" id="L293">    }</span>
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

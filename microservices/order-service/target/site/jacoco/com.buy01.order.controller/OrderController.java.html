@@ -1,0 +1,127 @@
+<?xml version="1.0" encoding="UTF-8"?><!DOCTYPE html PUBLIC "-//W3C//DTD XHTML 1.0 Strict//EN" "http://www.w3.org/TR/xhtml1/DTD/xhtml1-strict.dtd"><html xmlns="http://www.w3.org/1999/xhtml" lang="fr"><head><meta http-equiv="Content-Type" content="text/html;charset=UTF-8"/><link rel="stylesheet" href="../jacoco-resources/report.css" type="text/css"/><link rel="shortcut icon" href="../jacoco-resources/report.gif" type="image/gif"/><title>OrderController.java</title><link rel="stylesheet" href="../jacoco-resources/prettify.css" type="text/css"/><script type="text/javascript" src="../jacoco-resources/prettify.js"></script></head><body onload="window['PR_TAB_WIDTH']=4;prettyPrint()"><div class="breadcrumb" id="breadcrumb"><span class="info"><a href="../jacoco-sessions.html" class="el_session">Sessions</a></span><a href="../index.html" class="el_report">order-service</a> &gt; <a href="index.source.html" class="el_package">com.buy01.order.controller</a> &gt; <span class="el_source">OrderController.java</span></div><h1>OrderController.java</h1><pre class="source lang-java linenums">package com.buy01.order.controller;
+
+import com.buy01.order.dto.CheckoutRequest;
+import com.buy01.order.dto.SellerStatsDTO;
+import com.buy01.order.dto.UserStatsDTO;
+import com.buy01.order.model.Order;
+import com.buy01.order.model.OrderStatus;
+import com.buy01.order.service.OrderService;
+import com.fasterxml.jackson.databind.JsonNode;
+import com.fasterxml.jackson.databind.ObjectMapper;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.format.annotation.DateTimeFormat;
+import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
+import java.util.Base64;
+
+@RestController
+@RequestMapping(&quot;/api/orders&quot;)
+@RequiredArgsConstructor
+public class OrderController {
+
+    private final OrderService orderService;
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private String  seller = &quot;SELLER&quot;;
+    private String errors = &quot;Accès réservé aux vendeurs&quot;;
+
+    private String getClaim(String token, String claim) {
+        try {
+            // Remove &quot;Bearer &quot; prefix if present
+<span class="pc bpc" id="L34" title="1 of 2 branches missed.">            String jwt = token.startsWith(&quot;Bearer &quot;) ? token.substring(7) : token;</span>
+<span class="fc" id="L35">            String payload = jwt.split(&quot;\\.&quot;)[1];</span>
+<span class="fc" id="L36">            String decodedPayload = new String(Base64.getDecoder().decode(payload));</span>
+<span class="fc" id="L37">            JsonNode json = objectMapper.readTree(decodedPayload);</span>
+<span class="fc" id="L38">            return json.get(claim).asText();</span>
+<span class="nc" id="L39">        } catch (Exception e) {</span>
+<span class="nc" id="L40">            throw new RuntimeException(&quot;Token invalide : &quot; + e.getMessage());</span>
+        }
+    }
+
+    @GetMapping(&quot;/stats/user&quot;)
+    public UserStatsDTO getMyStats(@RequestHeader(&quot;Authorization&quot;) String token) {
+<span class="fc" id="L46">        String userId = getClaim(token, &quot;id&quot;);</span>
+<span class="fc" id="L47">        return orderService.getUserStats(userId);</span>
+    }
+
+    @GetMapping(&quot;/stats/seller&quot;)
+    public SellerStatsDTO getSellerStats(@RequestHeader(&quot;Authorization&quot;) String token) {
+<span class="fc" id="L52">        String role = getClaim(token, &quot;role&quot;);</span>
+<span class="fc bfc" id="L53" title="All 2 branches covered.">        if (!seller.equals(role)) {</span>
+<span class="fc" id="L54">            throw new RuntimeException(errors);</span>
+        }
+<span class="fc" id="L56">        String sellerId = getClaim(token, &quot;id&quot;);</span>
+<span class="fc" id="L57">        return orderService.getSellerStats(sellerId);</span>
+    }
+
+    @GetMapping
+    public Page&lt;Order&gt; getMyOrders(
+            @RequestHeader(&quot;Authorization&quot;) String token,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;10&quot;) int size) {
+<span class="fc" id="L69">        String userId = getClaim(token, &quot;id&quot;);</span>
+<span class="fc" id="L70">        return orderService.searchOrders(userId, null, status, start, end, keyword, PageRequest.of(page, size));</span>
+    }
+
+    @GetMapping(&quot;/seller&quot;)
+    public Page&lt;Order&gt; getSellerOrders(
+            @RequestHeader(&quot;Authorization&quot;) String token,
+            @RequestParam(required = false) OrderStatus status,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime start,
+            @RequestParam(required = false) @DateTimeFormat(iso = DateTimeFormat.ISO.DATE_TIME) LocalDateTime end,
+            @RequestParam(required = false) String keyword,
+            @RequestParam(defaultValue = &quot;0&quot;) int page,
+            @RequestParam(defaultValue = &quot;10&quot;) int size) {
+<span class="fc" id="L82">        String role = getClaim(token, &quot;role&quot;);</span>
+<span class="pc bpc" id="L83" title="1 of 2 branches missed.">        if (!seller.equals(role)) {</span>
+<span class="nc" id="L84">            throw new RuntimeException(errors);</span>
+        }
+<span class="fc" id="L86">        String sellerId = getClaim(token, &quot;id&quot;);</span>
+<span class="fc" id="L87">        return orderService.searchOrders(null, sellerId, status, start, end, keyword, PageRequest.of(page, size));</span>
+    }
+
+    @PostMapping(&quot;/{id}/cancel&quot;)
+    public Order cancelOrder(@RequestHeader(&quot;Authorization&quot;) String token, @PathVariable String id) {
+<span class="fc" id="L92">        String userId = getClaim(token, &quot;id&quot;);</span>
+<span class="fc" id="L93">        return orderService.cancelOrder(userId, id);</span>
+    }
+
+    @PutMapping(&quot;/{id}/status&quot;)
+    public Order updateOrderStatus(
+            @RequestHeader(&quot;Authorization&quot;) String token, 
+            @PathVariable String id, 
+            @RequestParam OrderStatus status) {
+<span class="fc" id="L101">        String role = getClaim(token, &quot;role&quot;);</span>
+<span class="pc bpc" id="L102" title="1 of 2 branches missed.">        if (!seller.equals(role)) {</span>
+<span class="nc" id="L103">            throw new RuntimeException(errors);</span>
+        }
+<span class="fc" id="L105">        String sellerId = getClaim(token, &quot;id&quot;);</span>
+<span class="fc" id="L106">        return orderService.updateOrderStatus(sellerId, id, status);</span>
+    }
+
+    @DeleteMapping(&quot;/{id}&quot;)
+    public void deleteOrder(@RequestHeader(&quot;Authorization&quot;) String token, @PathVariable String id) {
+<span class="fc" id="L111">        String userId = getClaim(token, &quot;id&quot;);</span>
+<span class="fc" id="L112">        orderService.deleteOrder(userId, id);</span>
+<span class="fc" id="L113">    }</span>
+
+    @PostMapping(&quot;/{id}/redo&quot;)
+    public Order redoOrder(@RequestHeader(&quot;Authorization&quot;) String token, @PathVariable String id) {
+<span class="fc" id="L117">        String userId = getClaim(token, &quot;id&quot;);</span>
+<span class="fc" id="L118">        return orderService.redoOrder(userId, id, token);</span>
+    }
+
+    @PostMapping(&quot;/checkout&quot;)
+    public Order checkout(@RequestHeader(&quot;Authorization&quot;) String token, @RequestBody @Valid CheckoutRequest request) {
+<span class="fc" id="L123">        String userId = getClaim(token, &quot;id&quot;);</span>
+<span class="fc" id="L124">        return orderService.checkout(userId, request, token);</span>
+    }
+}
+</pre><div class="footer"><span class="right">Created with <a href="http://www.jacoco.org/jacoco">JaCoCo</a> 0.8.12.202403310830</span></div></body></html>

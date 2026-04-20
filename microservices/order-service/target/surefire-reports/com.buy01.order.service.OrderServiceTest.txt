@@ -1,0 +1,4 @@
+-------------------------------------------------------------------------------
+Test set: com.buy01.order.service.OrderServiceTest
+-------------------------------------------------------------------------------
+Tests run: 11, Failures: 0, Errors: 0, Skipped: 0, Time elapsed: 1.100 s -- in com.buy01.order.service.OrderServiceTest
