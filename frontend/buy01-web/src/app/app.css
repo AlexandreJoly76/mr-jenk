@@ -169,7 +169,7 @@
   .navbar-links {
     position: fixed;
     top: 60px;
-    left: -110%;
+    left: -130%;
     width: 100%;
     height: calc(100vh - 60px);
     background: #2c3e50;
