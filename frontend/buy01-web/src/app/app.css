@@ -169,7 +169,7 @@
   .navbar-links {
     position: fixed;
     top: 60px;
-    left: -100%;
+    left: -110%;
     width: 100%;
     height: calc(100vh - 60px);
     background: #2c3e50;
@@ -178,12 +178,14 @@
     padding: 2rem;
     gap: 2rem;
     margin: 0;
-    transition: left 0.3s ease;
+    transition: left 0.4s cubic-bezier(0.4, 0, 0.2, 1);
     overflow-y: auto;
+    z-index: 999;
   }
 
   .navbar-links.active {
     left: 0;
+    box-shadow: 5px 0 15px rgba(0,0,0,0.3);
   }
 
   .nav-main {
