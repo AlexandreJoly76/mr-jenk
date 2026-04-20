@@ -142,7 +142,7 @@ describe('Signup', () => {
     
     component.onSubmit();
     
-    expect(component.message()).toBe('Erreur lors de l’inscription.');
+    expect(component.message()).toBe("Erreur lors de l'inscription.");
   });
 
   it('should handle avatar upload failure', () => {

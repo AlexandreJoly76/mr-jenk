@@ -71,7 +71,7 @@ describe('ProductService', () => {
     const productId = '1';
 
     service.deleteProduct(productId).subscribe(response => {
-      expect(response).toBeUndefined();
+      expect(response).toBeNull();
     });
 
     const req = httpMock.expectOne(`https://localhost:8080/product-service/api/products/${productId}`);

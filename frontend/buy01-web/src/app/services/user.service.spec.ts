@@ -109,9 +109,21 @@ describe('UserService', () => {
     const payload = { name: 'John Doe', email: 'john@example.com', role: 'CLIENT' };
     const encodedPayload = btoa(JSON.stringify(payload));
     const mockToken = `header.${encodedPayload}.signature`;
+    
+    // Clear everything and set token
+    localStorage.clear();
     localStorage.setItem('token', mockToken);
 
-    // Re-inject service to trigger constructor
+    // Reset TestBed to force a new service instance creation which will run the constructor
+    TestBed.resetTestingModule();
+    TestBed.configureTestingModule({
+      providers: [
+        provideRouter([]),
+        provideHttpClient(),
+        provideHttpClientTesting()
+      ]
+    });
+    
     const newService = TestBed.inject(UserService);
     expect(newService.currentUser()).toEqual(payload);
   });
