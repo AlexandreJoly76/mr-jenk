@@ -5,6 +5,8 @@ pipeline {
         pollSCM('* * * * *')
     }
 
+    // comment
+
     tools {
         maven 'maven-3'
         jdk 'jdk-17'
