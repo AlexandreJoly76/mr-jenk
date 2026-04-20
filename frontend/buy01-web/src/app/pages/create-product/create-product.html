@@ -20,6 +20,18 @@
     </div>
 
     <div style="margin-bottom: 1rem;">
+      <label>Catégorie</label>
+      <select formControlName="category" style="width: 100%; padding: 8px;">
+        <option value="">-- Choisir une catégorie --</option>
+        <option value="Électronique">Électronique</option>
+        <option value="Vêtements">Vêtements</option>
+        <option value="Maison">Maison</option>
+        <option value="Sport">Sport</option>
+        <option value="Autres">Autres</option>
+      </select>
+    </div>
+
+    <div style="margin-bottom: 1rem;">
       <label>Prix (€)</label>
       <input type="number" formControlName="price" style="width: 100%; padding: 8px;">
     </div>

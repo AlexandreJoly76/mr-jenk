@@ -16,5 +16,11 @@ import {UserService} from './services/user.service';
 export class App {
   // RÈGLE : Injection de dépendance via inject()
   public userService=inject(UserService);
+  
+  isMenuOpen = signal(false);
+
+  toggleMenu() {
+    this.isMenuOpen.update(v => !v);
+  }
 
 }

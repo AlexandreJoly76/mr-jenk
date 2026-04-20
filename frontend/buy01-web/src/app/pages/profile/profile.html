@@ -1,0 +1,74 @@
+<div class="profile-container">
+  <div *ngIf="loading()" class="loading-overlay">
+    <div class="spinner"></div>
+    <p>Chargement de votre profil...</p>
+  </div>
+
+  <header class="profile-header" *ngIf="!loading()">
+    <div class="user-badge">{{ isSeller() ? 'Compte Professionnel' : 'Compte Client' }}</div>
+    <h2>Bonjour, {{ userService.currentUser()?.sub }}</h2>
+  </header>
+
+  <div class="stats-grid" *ngIf="!loading()">
+    <!-- SECTION ACHETEUR -->
+    <section class="stat-section buyer-section">
+      <div class="section-title">
+        <span>🛒 Mes Activités d'Achat</span>
+      </div>
+
+      <div class="main-metrics">
+        <div class="metric-card">
+          <span class="metric-value">{{ (userStats()?.totalSpent || 0) | currency:'EUR' }}</span>
+          <span class="metric-label">Total Dépensé</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-value">{{ userStats()?.totalOrders || 0 }}</span>
+          <span class="metric-label">Commandes</span>
+        </div>
+      </div>
+
+      <div class="product-list-container">
+        <h4>📦 Mes articles fréquents</h4>
+        <div *ngIf="userStats()?.topProducts?.length; else emptyBuyer">
+          <div class="product-item" *ngFor="let p of userStats()?.topProducts">
+            <span class="product-name">{{ p.productName }}</span>
+            <span class="product-count">{{ p.count }} fois</span>
+          </div>
+        </div>
+        <ng-template #emptyBuyer>
+          <p class="empty-state">Vous n'avez pas encore passé de commande.</p>
+        </ng-template>
+      </div>
+    </section>
+
+    <!-- SECTION VENDEUR (Affichée uniquement si rôle SELLER) -->
+    <section class="stat-section seller-section" *ngIf="isSeller()">
+      <div class="section-title">
+        <span>💰 Ma Boutique</span>
+      </div>
+      <div class="main-metrics">
+        <div class="metric-card">
+          <span class="metric-value">{{ (sellerStats()?.totalRevenue || 0) | currency:'EUR' }}</span>
+          <span class="metric-label">Revenu Total</span>
+        </div>
+        <div class="metric-card">
+          <span class="metric-value">{{ sellerStats()?.completedOrders || 0 }}</span>
+          <span class="metric-label">Ventes Livrées</span>
+        </div>
+      </div>
+
+      <div class="product-list-container">
+        <h4>🔥 Mes Best-Sellers</h4>
+        <div *ngIf="sellerStats()?.bestSellers?.length; else emptySeller">
+          <div class="product-item" *ngFor="let p of sellerStats()?.bestSellers">
+            <span class="product-name">{{ p.productName }}</span>
+            <span class="product-count">{{ p.count }} vendus</span>
+          </div>
+        </div>
+        <ng-template #emptySeller>
+          <p class="empty-state">Aucune vente enregistrée pour le moment.</p>
+        </ng-template>
+      </div>
+    </section>
+  </div>
+</div>

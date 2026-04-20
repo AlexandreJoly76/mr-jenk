@@ -1,0 +1,6 @@
+/home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/test/java/com/buy01/order/OrderServiceApplicationTests.java
+/home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/test/java/com/buy01/order/config/GlobalExceptionHandlerTest.java
+/home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/test/java/com/buy01/order/controller/OrderControllerTest.java
+/home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/test/java/com/buy01/order/dto/DTOTest.java
+/home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/test/java/com/buy01/order/model/ModelTest.java
+/home/zone01student/BrancheJava/mr-jenk/microservices/order-service/src/test/java/com/buy01/order/service/OrderServiceTest.java

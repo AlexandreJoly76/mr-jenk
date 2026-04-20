@@ -46,13 +46,27 @@ export class UserService {
   private restoreUserFromToken() {
     const token = localStorage.getItem('token');
     if (token) {
-      try {
-        const payload = JSON.parse(atob(token.split('.')[1]));
-        this.currentUser.set(payload); // On met les infos dans le signal
-      } catch (e) {
-        console.error("Token invalide", e);
+      const payload = this.decodeToken(token);
+      if (payload) {
+        this.currentUser.set(payload);
+      } else {
         this.logout();
       }
+    }
+  }
+
+  private decodeToken(token: string): any {
+    try {
+      const parts = token.split('.');
+      if (parts.length !== 3) {
+        return null;
+      }
+      const payload = parts[1];
+      // On décode du Base64 et on parse le JSON
+      return JSON.parse(atob(payload));
+    } catch (e) {
+      // On ne loggue pas forcément une erreur en mode "silencieux" si c'est juste un token malformé
+      return null;
     }
   }
 
@@ -73,16 +87,7 @@ export class UserService {
   getUserInfoFromToken(): any {
     const token = localStorage.getItem('token');
     if (!token) return null;
-
-    try {
-      // Le JWT a 3 parties séparées par des points. La 2ème partie est le "payload" (les données).
-      const payload = token.split('.')[1];
-      // On décode du Base64 et on parse le JSON
-      return JSON.parse(atob(payload));
-    } catch (e) {
-      console.error("Erreur décodage token", e);
-      return null;
-    }
+    return this.decodeToken(token);
   }
 
   // Méthode pour savoir si on est connecté
